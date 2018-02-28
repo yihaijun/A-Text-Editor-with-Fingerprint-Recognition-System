@@ -227,13 +227,13 @@ public class FingerprintRecognitionDemo extends JFrame {
                                 textArea.setText("Please press your finger! (remaining: " + (3 - enrollIndex) + " times)");
                             }
                         } else if (verifying) {
-                            long startTime = (new Date()).getTime();
+                            final long startTime = (new Date()).getTime();
                             Thread timeThread = new Thread() {
                                 @Override
                                 public void run() {
                                     while (true) {
                                         try {
-                                            textArea.setText("Verifying (" + ((new Date()).getTime() - startTime) / 1000 + " s)\n");
+                                        	textArea.setText("Verifying (" + ((new Date()).getTime() - startTime) / 1000 + " s)\n");
                                             Thread.sleep(1000);
                                         } catch (Exception e) {
                                             break;
@@ -243,7 +243,7 @@ public class FingerprintRecognitionDemo extends JFrame {
                             };
                             timeThread.start();
                             int ret = ZKFPService.MatchFP(bytes, retTempArray);
-                            int[] MyScore = new int[3];
+                            final int[] MyScore = new int[3];
                             Thread thread1 = new Thread() {
                                 @Override
                                 public void run() {
