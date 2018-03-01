@@ -1,3 +1,5 @@
 /FingerprintRecognitionDemo/bin
 bin
 /FingerprintRecognitionDemo/fingerprint.bmp
+/FingerprintRecognitionDemo/.settings
+/FingerprintRecognitionDemo/*.log

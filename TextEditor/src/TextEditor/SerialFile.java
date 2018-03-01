@@ -71,7 +71,7 @@ public class SerialFile {
     }
 
     public boolean getFlag() {
-        return (boolean) files[1];
+        return (Boolean) files[1];
     }
 
     public StyledDocument getStyledDocument() {

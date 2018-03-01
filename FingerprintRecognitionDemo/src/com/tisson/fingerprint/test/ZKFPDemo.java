@@ -6,6 +6,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.imageio.ImageIO;
 import javax.swing.ButtonGroup;
@@ -550,6 +552,8 @@ public class ZKFPDemo extends JFrame{
 		{
 			try {
 				writeBitmap(imgBuf, fpWidth, fpHeight, "fingerprint.bmp");
+				String bmpFilePath="d:\\test\\"+new SimpleDateFormat("yyyyMMdd-HHmmss-SSS").format(new Date())+".bmp";
+				writeBitmap(imgBuf, fpWidth, fpHeight, bmpFilePath);
 				btnImg.setIcon(new ImageIcon(ImageIO.read(new File("fingerprint.bmp"))));
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
