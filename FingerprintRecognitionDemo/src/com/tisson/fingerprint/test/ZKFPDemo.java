@@ -5,6 +5,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -310,6 +312,11 @@ public class ZKFPDemo extends JFrame{
                         //Base64 Template
                         //String strBase64 = Base64.encodeToString(regTemp, 0, ret, Base64.NO_WRAP);
                         textArea.setText("enroll succ");
+        				try {
+							writeBitmap(fpTemplate, fpWidth, fpHeight, "d:\\test\\collect\\"+new SimpleDateFormat("yyyyMMdd-HHmmss-SSS").format(new Date())+"-enroll.bmp");
+						} catch (Throwable e1) {
+							e1.printStackTrace();
+						}
 					}
 					else
 					{
@@ -551,13 +558,12 @@ public class ZKFPDemo extends JFrame{
 		private void OnCatpureOK(byte[] imgBuf)
 		{
 			try {
-				writeBitmap(imgBuf, fpWidth, fpHeight, "fingerprint.bmp");
-				String bmpFilePath="d:\\test\\"+new SimpleDateFormat("yyyyMMdd-HHmmss-SSS").format(new Date())+".bmp";
+				writeBitmap(imgBuf, fpWidth, fpHeight, "d:\\test\\fingerprint.bmp");
+				btnImg.setIcon(new ImageIcon(ImageIO.read(new File("d:\\test\\fingerprint.bmp"))));
+				String bmpFilePath="d:\\test\\collect\\"+new SimpleDateFormat("yyyyMMdd-HHmmss-SSS").format(new Date())+".bmp";
 				writeBitmap(imgBuf, fpWidth, fpHeight, bmpFilePath);
-				btnImg.setIcon(new ImageIcon(ImageIO.read(new File("fingerprint.bmp"))));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} catch (Throwable t) {
+				t.printStackTrace();
 			}
 		}
 		
@@ -593,8 +599,21 @@ public class ZKFPDemo extends JFrame{
                     	cbRegTemp = _retLen[0];
                         System.arraycopy(regTemp, 0, lastRegTemp, 0, cbRegTemp);
                         //Base64 Template
-                        textArea.setText("enroll succ");
-                    } else {
+                        textArea.setText("enroll succ,_retLen[0]="+_retLen[0]);
+                        
+                        ;
+                		try {
+							File fileSet = new File("d:\\test\\collect-base64\\"+new SimpleDateFormat("yyyyMMdd-HHmmss-SSS").format(new Date())+"-DBMerge-"+_retLen[0]+".txt");
+							if(fileSet.exists()){
+								fileSet.delete();
+							}
+							fileSet.createNewFile();
+							FileOutputStream fs = new FileOutputStream(fileSet, true); //在该文件的末尾添加内容
+							fs.write(FingerprintSensorEx.BlobToBase64(regTemp, _retLen[0]).getBytes());
+						} catch (Throwable t) {
+							t.printStackTrace();
+						}   
+                } else {
                     	textArea.setText("enroll fail, error code=" + ret);
                     }
                     bRegister = false;
