@@ -3,3 +3,10 @@ bin
 /FingerprintRecognitionDemo/fingerprint.bmp
 /FingerprintRecognitionDemo/.settings
 /FingerprintRecognitionDemo/*.log
+/tisson-sfip-app-FingerprintSensorTool/.classpath
+/tisson-sfip-app-FingerprintSensorTool/.project
+/tisson-sfip-app-FingerprintSensorTool/.settings
+/tisson-sfip-app-FingerprintSensorTool/target/classes/META-INF
+/tisson-sfip-app-FingerprintSensorTool/target/maven-archiver
+/tisson-sfip-app-FingerprintSensorTool/target/test-classes
+/tisson-sfip-app-FingerprintSensorTool/target

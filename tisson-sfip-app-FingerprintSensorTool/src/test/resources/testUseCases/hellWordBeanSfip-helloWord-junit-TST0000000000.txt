@@ -1,0 +1,5 @@
+{
+"appName":"app-test",
+"beanName":"hellWordBeanImpl",
+"msg":"Hello,How are you!"
+}

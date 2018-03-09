@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:context="http://www.springframework.org/schema/context" 
+	xmlns:dubbo="http://code.alibabatech.com/schema/dubbo" 
+	xmlns:sfip="http://www.tisson.cn/schema/sfip" 
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context.xsd
+        http://code.alibabatech.com/schema/dubbo
+        http://code.alibabatech.com/schema/dubbo/dubbo.xsd
+        http://www.tisson.cn/schema/sfip
+        http://www.tisson.cn/schema/sfip/sfip.xsd
+        ">
+    
+    <!--    
+	<context:component-scan base-package="com.tisson.fingerprint.FingerprintSensorTool.sfipappsample" />
+	-->
+	<bean id="sfipServiceParamDef"
+		class="com.tisson.sfip.module.util.serviceapitest.SfipServiceParamDef"
+		scope="singleton">
+		<property name="paramTypeList">
+			<map>
+			</map>
+		</property>
+	</bean>
+
+	<bean id="loadTestUseCasesArray"
+		class="com.tisson.sfip.module.util.serviceapitest.LoadTestUseCasesArray"
+		scope="singleton">
+	</bean>
+
+	<bean id="hellWordBeanImpl"
+		class="com.tisson.fingerprint.FingerprintSensorTool.sfipappsample.HellWordBeanImpl" >
+	</bean>
+
+	<sfip:callOtherAppBean id="hellWordBeanSfip"
+		appName="tisson-sfip-app-FingerprintSensorTool*"
+		beanName="hellWordBeanImpl"
+		interface="com.tisson.sfip.api.service.HellWordBeanInterface"/>
+</beans>
