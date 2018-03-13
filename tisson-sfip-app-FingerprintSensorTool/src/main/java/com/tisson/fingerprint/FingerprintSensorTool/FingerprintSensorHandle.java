@@ -12,6 +12,8 @@ import java.io.Reader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.jboss.resteasy.util.Base64;
+
 import lombok.extern.slf4j.Slf4j;
 
 import com.zkteco.biometric.FingerprintSensor;
@@ -64,6 +66,24 @@ public class FingerprintSensorHandle {
 	private static int fpHeight = 0;
 
 	private static int iFid = 1;
+
+	private static String currentOwner="";
+	private static String currentOwnerRegTempBase64="";
+
+	
+	/**
+	 * @return the currentOwnerRegTempBase64
+	 */
+	public static String getCurrentOwnerRegTempBase64() {
+		return currentOwnerRegTempBase64;
+	}
+
+	/**
+	 * @return the currentOwner
+	 */
+	public static String getCurrentOwner() {
+		return currentOwner;
+	}
 
 	/**
 	 * @return the manufacturer
@@ -151,9 +171,11 @@ public class FingerprintSensorHandle {
 		return 0;
 	}
 
-	public static int cmdEnroll() {
+	public static int cmdEnroll(String owner) {
+		currentOwner=owner;
 		enroll_idx = 0;
 		bRegister = true;
+		bIdentify = false;
 		cmdPrompt = "please press the same finger 3 times for the enrollment";
 		return 0;
 	}
@@ -169,6 +191,7 @@ public class FingerprintSensorHandle {
 	public static String cmdVerify(String path) {
 		enroll_idx = 0;
 		bRegister = false;
+		bIdentify = false;
 		cmdPrompt = "";
 		return identifyBmpFile(path);
 	}
@@ -176,8 +199,9 @@ public class FingerprintSensorHandle {
 	public static String cmdTxtVerify(String path) {
 		enroll_idx = 0;
 		bRegister = false;
+		bIdentify = false;
 		cmdPrompt = "";
-		return identifyTxtFile(path);
+		return identifyText(path);
 	}
 
 	/**
@@ -201,7 +225,7 @@ public class FingerprintSensorHandle {
 	}
 
 	private static boolean loadTestBase64(boolean printlog) {
-		File fileSet = new File("d:\\test\\collect-base64");
+		File fileSet = new File("..\\fingerprint\\collect-base64");
 		File[] files = null;
 		if (!(fileSet.exists() && fileSet.isDirectory())) {
 			return false;
@@ -230,29 +254,35 @@ public class FingerprintSensorHandle {
 			// sizeFPTemp);
 			int ret2 = ZKFPService.ExtractFromImage(path, 500, fpTemplate,
 					sizeFPTemp);
+			iFid= java.lang.Math.max(iFid,FingerprintSensorEx.DBCount(mhDevice)+1);
 			int ret3 = FingerprintSensorEx.DBAdd(mhDevice, iFid, fpTemplate);
-			FingerprintVo vo = new FingerprintVo();
-			vo.setName(path);
-			vo.setData(fpTemplate);
-			vo.setFid(iFid);
-			fingerprintArry.add(vo);
 			if (ret3 == 0) {
+				FingerprintVo vo = new FingerprintVo();
+				vo.setName(path);
+				vo.setData(fpTemplate);
+				String preKey="..\\fingerprint\\collect-base64\\fingerprint-";
+				if(path.indexOf(preKey)>=0){
+					vo.setOwner(path.substring(preKey.length(),path.indexOf("-",preKey.length()))); 
+				}
+				vo.setFid(iFid);
+				fingerprintArry.add(vo);
 				iFid++;
 			} else {
 				return false;
 			}
 			if (printlog) {
-				System.out
-						.println("[" + df.format(new Date()) + "] path=" + path
+				if(log.isTraceEnabled()){
+					log.trace("[" + df.format(new Date()) + "] path=" + path
 								+ ",ExtractFromImage=" + ret2 + ",DBAdd="
 								+ ret3);
+				}
 			}
 		}
 		return true;
 	}
 
 	private static boolean loadTestBmp(boolean normal, boolean printlog) {
-		String parentPath = "d:\\test\\";
+		String parentPath = "..\\fingerprint\\";
 		if (normal) {
 			parentPath = parentPath + "db";
 		} else {
@@ -275,17 +305,22 @@ public class FingerprintSensorHandle {
 				int ret2 = FingerprintSensorEx.ExtractFromImage(mhDevice, path,
 						500, fpTemplate, sizeFPTemp);
 				if (normal) {
+					iFid= java.lang.Math.max(iFid,FingerprintSensorEx.DBCount(mhDevice)+1);
 					ret3 = FingerprintSensorEx
 							.DBAdd(mhDevice, iFid, fpTemplate);
 					if (ret3 != 0) {
 						return false;
 					}
-					iFid++;
 					FingerprintVo vo = new FingerprintVo();
 					vo.setName(path);
 					vo.setData(fpTemplate);
 					vo.setFid(iFid);
+					String preKey="..\\fingerprint\\db\\fingerprint-";
+					if(path.indexOf(preKey)>=0){
+						vo.setOwner(path.substring(preKey.length(),path.indexOf("-",preKey.length()))); 
+					}
 					fingerprintArry.add(vo);
+					iFid++;
 				} else {
 					FingerprintVo vo = new FingerprintVo();
 					vo.setName(path);
@@ -367,6 +402,37 @@ public class FingerprintSensorHandle {
 		return outBuf.toString();
 	}
 
+	private static String identifyText(String text) {
+		int[] fid = new int[10];
+		int[] score = new int[10];
+		int ret = 0;
+		FingerprintSensor fsTest = new FingerprintSensor();
+
+		String []arry=text.split(":");
+		String lenFlag = arry[1];
+		int len = Integer.valueOf(lenFlag).intValue();
+		
+		String base64 = text.substring(("libzkfp:"+len).length()+1);
+		if(log.isTraceEnabled()){
+			log.trace("ifpTemplate base64="+base64);
+		}
+		
+		byte[] fpTemplate = new byte[len];
+		FingerprintSensorEx.Base64ToBlob(base64, fpTemplate, len);
+
+		ret = FingerprintSensorEx.DBIdentify(mhDevice, fpTemplate, fid, score);
+        if(ret!=0){
+        	return "DBIdentify fail,ret="+ret;
+        }
+		StringBuffer outBuf = new StringBuffer();
+		outBuf.delete(0, outBuf.length());
+		outBuf.append("DBIdentify=" + ret);
+		for (int j = 0; j < fid.length; j++) {
+			outBuf.append("," + fid[j] + ":" + score[j]);
+		}
+		return outBuf.toString();
+	}
+
 	private static String identifyTxtFile(String path) {
 		int[] fid = new int[10];
 		int[] score = new int[10];
@@ -422,6 +488,7 @@ public class FingerprintSensorHandle {
 		sizeFPTemp[0] = 2048;
 		for (int i = 0; i < fingerprintArry.size(); i++) {
 			FingerprintVo vo = fingerprintArry.get(i);
+			iFid= java.lang.Math.max(iFid,FingerprintSensorEx.DBCount(mhDevice)+1);
 			int ret3 = FingerprintSensorEx.DBAdd(mhDevice, iFid, vo.getData());
 			if (ret3 == 0) {
 				iFid++;
@@ -433,7 +500,7 @@ public class FingerprintSensorHandle {
 	}
 
 	private static boolean bmpToKey() {
-		String parentPath = "d:\\test\\bmp";
+		String parentPath = "..\\fingerprint\\bmp";
 		File fileSet = new File(parentPath);
 		File[] files = null;
 		if (fileSet.exists() && fileSet.isDirectory()) {
@@ -457,7 +524,7 @@ public class FingerprintSensorHandle {
 					continue;
 				}
 				try {
-					String fileKeyPath = "d:\\test\\bmp-key\\"
+					String fileKeyPath = "..\\fingerprint\\bmp-key\\"
 							+ files[i].getName()
 							+ "-"
 							+ new SimpleDateFormat("yyyyMMdd-HHmmss-SSS")
@@ -472,7 +539,7 @@ public class FingerprintSensorHandle {
 					fs.write(FingerprintSensorEx.BlobToBase64(regTemp,
 							_retLen[0]).getBytes());
 				} catch (Throwable t) {
-					t.printStackTrace();
+					log.error("",t);
 				}
 			}
 		}
@@ -522,7 +589,7 @@ public class FingerprintSensorHandle {
 				try {
 					Thread.sleep(500);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					log.error("",e);
 				}
 
 			}
@@ -534,11 +601,11 @@ public class FingerprintSensorHandle {
 
 	private static void OnCatpureOK(byte[] imgBuf) {
 		try {
-			writeBitmap(imgBuf, fpWidth, fpHeight, "d:\\test\\fingerprint.bmp");
+			writeBitmap(imgBuf, fpWidth, fpHeight, "..\\fingerprint\\fingerprint.bmp");
 			// btnImg.setIcon(new ImageIcon(ImageIO.read(new
 			// File("fingerprint.bmp"))));
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error("",e);
 		}
 	}
 
@@ -568,6 +635,7 @@ public class FingerprintSensorHandle {
 				_retLen[0] = 2048;
 				byte[] regTemp = new byte[_retLen[0]];
 
+				iFid= java.lang.Math.max(iFid,FingerprintSensorEx.DBCount(mhDevice)+1);
 				if (0 == (ret = FingerprintSensorEx.DBMerge(mhDB,
 						regtemparray[0], regtemparray[1], regtemparray[2],
 						regTemp, _retLen))
@@ -578,6 +646,36 @@ public class FingerprintSensorHandle {
 					System.arraycopy(regTemp, 0, lastRegTemp, 0, cbRegTemp);
 					// Base64 Template
 					cmdPrompt = "enroll succ";
+//					final sun.misc.BASE64Encoder encoder = new sun.misc.BASE64Encoder();
+//					final sun.misc.BASE64Decoder decoder = new sun.misc.BASE64Decoder();
+//					currentOwnerRegTempBase64=encoder.encode(lastRegTemp);
+
+					currentOwnerRegTempBase64="libzkfp:"+_retLen[0]+":"+FingerprintSensorEx.BlobToBase64(regTemp, _retLen[0]);
+
+					String bmpFilePath="..\\fingerprint\\collect\\fingerprint-"+currentOwner+"-"+new SimpleDateFormat("yyyyMMdd-HHmmss-SSS").format(new Date())+".bmp";
+					String txtFilePath="..\\fingerprint\\collect-base64\\fingerprint-"+currentOwner+"-"+new SimpleDateFormat("yyyyMMdd-HHmmss-SSS").format(new Date())+"-DBMerge-"+_retLen[0]+".txt";
+					try {
+    					writeBitmap(imgbuf, fpWidth, fpHeight, bmpFilePath);
+						File fileSet = new File(txtFilePath);
+						if(fileSet.exists()){
+							fileSet.delete();
+						}
+						fileSet.createNewFile();
+						FileOutputStream fs = new FileOutputStream(fileSet, true); //在该文件的末尾添加内容
+						fs.write(FingerprintSensorEx.BlobToBase64(regTemp, _retLen[0]).getBytes());
+					} catch (Throwable t) {
+						t.printStackTrace();
+					}   
+
+					FingerprintVo vo = new FingerprintVo();
+					if(log.isTraceEnabled()){
+						log.trace("currentOwner="+currentOwner);
+					}
+					vo.setOwner(currentOwner);
+					vo.setFid(iFid-1);
+					vo.setName(bmpFilePath);
+					vo.setData(lastRegTemp);
+					fingerprintArry.add(vo);
 				} else {
 					cmdPrompt = "enroll fail, error code=" + ret;
 				}
@@ -595,6 +693,15 @@ public class FingerprintSensorHandle {
 				if (ret == 0) {
 					cmdPrompt = "Identify succ, fid=" + fid[0] + ",score="
 							+ score[0];
+					for(int i=0;i<fingerprintArry.size();i++){
+						if(log.isTraceEnabled()){
+							log.trace("fingerprintArry.get("+i+").getFid()="+fingerprintArry.get(i).getFid()+",fid[0]="+fid[0]+",currentOwner="+currentOwner);
+						}
+						if(fingerprintArry.get(i).getFid()==fid[0]){
+							currentOwner=fingerprintArry.get(i).getOwner();
+							break;
+						}
+					}
 				} else {
 					cmdPrompt = "Identify fail, errcode=" + ret;
 				}
@@ -671,7 +778,7 @@ public class FingerprintSensorHandle {
 			}
 			return outBuf.toString();
 		} catch (Throwable t) {
-			t.printStackTrace();
+			log.error("",t);
 			return null;
 		} finally {
 			if (reader != null) {
@@ -767,8 +874,7 @@ public class FingerprintSensorHandle {
 		try { // wait for thread stopping
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("",e);
 		}
 		// if (0 != mhDB)
 		// {

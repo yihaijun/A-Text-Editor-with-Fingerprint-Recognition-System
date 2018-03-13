@@ -30,7 +30,7 @@ public class HellWordBeanImplTest  implements ApplicationContextAware {
 	@Autowired
 	protected LoadTestUseCasesArray loadTestUseCasesArray;
 
-	@Override
+//	@Override
 	public void setApplicationContext(ApplicationContext applicationContext)
 			throws BeansException {
 		this.applicationContext = applicationContext;

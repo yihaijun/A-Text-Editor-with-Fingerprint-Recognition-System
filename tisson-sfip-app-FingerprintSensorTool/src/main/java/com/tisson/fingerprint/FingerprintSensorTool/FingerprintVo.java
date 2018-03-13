@@ -12,7 +12,7 @@ public class FingerprintVo {
 	private String name;
 	private String owner;
 	
-	private int fid;
+	private int fid=-1;
 	
 	/**
 	 * @return the data

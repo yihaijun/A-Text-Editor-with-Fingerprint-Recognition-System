@@ -26,7 +26,6 @@ public class HellWordBeanImpl implements HellWordBeanInterface {
 	 */
 	private static final long serialVersionUID = -1067315977501626921L;
 
-	@Override
 	public HelloWordResponse helloWord(HelloWordRequest msg) {
 //		log.info("recive:"+msg);
 		
@@ -38,10 +37,14 @@ public class HellWordBeanImpl implements HellWordBeanInterface {
 		int ret = 0;
 		if(msg.getBeanName().equalsIgnoreCase("load")){
 			ret = FingerprintSensorHandle.load();
-			response.setResult(FingerprintSensorHandle.getManufacturer() +"," + FingerprintSensorHandle.getFingerprintArryCount());
+			response.setResult(FingerprintSensorHandle.getManufacturer() +"," + FingerprintSensorHandle.getFingerprintArryCount()+",SfipHome="+com.tisson.sfip.util.SystemUtils.getSfipHome());
 		}else if(msg.getBeanName().equalsIgnoreCase("cmdEnroll")){
-			ret = FingerprintSensorHandle.cmdEnroll();
+			ret = FingerprintSensorHandle.cmdEnroll(msg.getMsg());
 			response.setResult(FingerprintSensorHandle.getManufacturer() +"," + FingerprintSensorHandle.getFingerprintArryCount());
+		}else if(msg.getBeanName().equalsIgnoreCase("getCurrentOwner")){
+			response.setResult(FingerprintSensorHandle.getCurrentOwner());
+		}else if(msg.getBeanName().equalsIgnoreCase("getCurrentOwnerRegTempBase64")){
+			response.setResult(FingerprintSensorHandle.getCurrentOwnerRegTempBase64());
 		}else if(msg.getBeanName().equalsIgnoreCase("cmdIdentify")){
 			ret = FingerprintSensorHandle.cmdIdentify();
 			response.setResult(FingerprintSensorHandle.getManufacturer() +"," + FingerprintSensorHandle.getFingerprintArryCount());

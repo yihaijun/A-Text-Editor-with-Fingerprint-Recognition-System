@@ -12,7 +12,9 @@
 	<!--dubbo:monitor protocol="registry"/-->
 
     <dubbo:protocol name="rest" threadpool="cached" corethreads="1" queues="0" threads="5" keepalivetime="120000"
-                    port="${tisson-sfip-app-FingerprintSensorTool.protocol.rest.port}" contextpath="services" accepts="500" extension="com.alibaba.dubbo.rpc.protocol.rest.support.LoggingFilter"/>
+                    port="${tisson-sfip-app-FingerprintSensorTool.protocol.rest.port}" 
+                    contextpath="services" accepts="500" 
+                    extension="com.tisson.fingerprint.FingerprintSensorTool.sfipappsample.RestControllFilter,com.alibaba.dubbo.rpc.protocol.rest.support.LoggingFilter"/>
 
 	<import resource="classpath:/spring/tisson-sfip-app-FingerprintSensorTool-dubbo-provider.xml" />
 	<import resource="classpath:/spring/tisson-sfip-app-FingerprintSensorTool-dubbo-consumer.xml" />
