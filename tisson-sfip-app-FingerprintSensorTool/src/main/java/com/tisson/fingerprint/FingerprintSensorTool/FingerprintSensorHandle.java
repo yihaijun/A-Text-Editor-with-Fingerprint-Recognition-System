@@ -47,6 +47,7 @@ public class FingerprintSensorHandle {
 	private static byte[] imgbuf = null;
 	private static byte[] template = new byte[2048];
 	private static int[] templateLen = new int[1];
+	private static boolean bCollection = false;
 	private static boolean bRegister = false;
 	private static boolean bIdentify = false;
 	private static int enroll_idx = 0;
@@ -89,6 +90,10 @@ public class FingerprintSensorHandle {
 	 * @return the manufacturer
 	 */
 	public static String getManufacturer() {
+		manufacturer = "";
+		manufacturer += getStrParameter(1101);
+		manufacturer += getStrParameter(1102);
+		manufacturer += "(SN=" + getStrParameter(1103) + ")";
 		return manufacturer;
 	}
 
@@ -128,15 +133,12 @@ public class FingerprintSensorHandle {
 			FreeSensor();
 			return 0;
 		}
-		manufacturer = "";
-		manufacturer += getStrParameter(1101);
-		manufacturer += getStrParameter(1102);
-		manufacturer += "(SN=" + getStrParameter(1103) + ")";
-		log.info("manufacturer=" + manufacturer);
+		log.info("manufacturer=" + getManufacturer());
 
-		loadTestBase64(false);
-		loadTestBmp(true, false);
-
+		if(!bCollection){
+			loadTestBase64(false);
+			loadTestBmp(true, false);
+		}
 		// For ISO/Ansi
 		int nFmt = 0; // Ansi
 		FingerprintSensorEx.DBSetParameter(mhDB, 5010, nFmt);
@@ -171,9 +173,22 @@ public class FingerprintSensorHandle {
 		return 0;
 	}
 
+	public static int cmdCollection() {
+		load();
+		bCollection = true;
+		enroll_idx = 0;
+		bRegister = false;
+		bIdentify = false;
+		cmdPrompt = "please press the same finger 3 times for the enrollment";
+//		FreeSensor();
+//		deviceCount=0;
+//		load();
+		return 0;
+	}
 	public static int cmdEnroll(String owner) {
 		currentOwner=owner;
 		enroll_idx = 0;
+		bCollection = false;
 		bRegister = true;
 		bIdentify = false;
 		cmdPrompt = "please press the same finger 3 times for the enrollment";
@@ -182,6 +197,7 @@ public class FingerprintSensorHandle {
 
 	public static int cmdIdentify() {
 		enroll_idx = 0;
+		bCollection = false;
 		bRegister = false;
 		bIdentify = true;
 		cmdPrompt = "";
@@ -190,6 +206,7 @@ public class FingerprintSensorHandle {
 
 	public static String cmdVerify(String path) {
 		enroll_idx = 0;
+		bCollection = false;
 		bRegister = false;
 		bIdentify = false;
 		cmdPrompt = "";
@@ -198,6 +215,7 @@ public class FingerprintSensorHandle {
 
 	public static String cmdTxtVerify(String path) {
 		enroll_idx = 0;
+		bCollection = false;
 		bRegister = false;
 		bIdentify = false;
 		cmdPrompt = "";
@@ -217,6 +235,10 @@ public class FingerprintSensorHandle {
 		paramLen[0] = 100;
 		int ret = FingerprintSensorEx.GetParameters(mhDevice, code, paramValue,
 				paramLen);
+		if(ret!=0){
+			cmdPrompt = "GetParameters("+code+") failed,ret="+ret;
+			return "";
+		}
 		String result = "";
 		for (int i = 0; i < paramLen[0]; i++) {
 			result = result + (char) paramValue[i];
@@ -424,15 +446,33 @@ public class FingerprintSensorHandle {
         if(ret!=0){
         	return "DBIdentify fail,ret="+ret;
         }
-		StringBuffer outBuf = new StringBuffer();
+        StringBuffer outBuf = new StringBuffer();
 		outBuf.delete(0, outBuf.length());
-		outBuf.append("DBIdentify=" + ret);
-		for (int j = 0; j < fid.length; j++) {
-			outBuf.append("," + fid[j] + ":" + score[j]);
+
+		FingerprintVo vo = getFingerprintVo(fid[0]);
+		outBuf.append(vo.getOwner()+ "=" + score[0] + ";");
+		int pos = fid[0]+1;
+		int count =0;
+		for (int j = pos; j < iFid && count<10; j++) {
+			ret = ZKFPService.VerifyFPByID(j, fpTemplate);
+			if(ret<=30){
+				continue;
+			}
+			vo = getFingerprintVo(j);
+			outBuf.append(vo.getOwner()+ "=" + score[0] + ";");
 		}
 		return outBuf.toString();
 	}
 
+	private static FingerprintVo getFingerprintVo(int fid){
+		for(int i=0;i<fingerprintArry.size();i++){
+			if(fingerprintArry.get(i).getFid()==fid){
+				return fingerprintArry.get(i);
+			}
+		}
+		return null;
+	}
+	
 	private static String identifyTxtFile(String path) {
 		int[] fid = new int[10];
 		int[] score = new int[10];
@@ -610,15 +650,16 @@ public class FingerprintSensorHandle {
 	}
 
 	private static void OnExtractOK(byte[] template, int len) {
-		if (bRegister) {
+		
+		if (bRegister || bCollection) {
 			int[] fid = new int[1];
 			int[] score = new int[1];
 			int ret = FingerprintSensorEx
 					.DBIdentify(mhDB, template, fid, score);
-			if (ret == 0) {
+			if (ret == 0  && !bCollection) {
 				cmdPrompt = "the finger already enroll by " + fid[0]
 						+ ",cancel enroll";
-				bRegister = false;
+//				bRegister = false;
 				enroll_idx = 0;
 				return;
 			}
@@ -626,6 +667,7 @@ public class FingerprintSensorHandle {
 					&& FingerprintSensorEx.DBMatch(mhDB,
 							regtemparray[enroll_idx - 1], template) <= 0) {
 				cmdPrompt = "please press the same finger 3 times for the enrollment";
+				enroll_idx = 0;
 				return;
 			}
 			System.arraycopy(template, 0, regtemparray[enroll_idx], 0, 2048);
@@ -639,9 +681,11 @@ public class FingerprintSensorHandle {
 				if (0 == (ret = FingerprintSensorEx.DBMerge(mhDB,
 						regtemparray[0], regtemparray[1], regtemparray[2],
 						regTemp, _retLen))
-						&& 0 == (ret = FingerprintSensorEx.DBAdd(mhDB, iFid,
-								regTemp))) {
-					iFid++;
+						&& 0 == (ret = (bCollection?0:FingerprintSensorEx.DBAdd(mhDB, iFid,
+								regTemp)))) {
+					if(!bCollection){
+						iFid++;
+					}
 					cbRegTemp = _retLen[0];
 					System.arraycopy(regTemp, 0, lastRegTemp, 0, cbRegTemp);
 					// Base64 Template
@@ -652,6 +696,16 @@ public class FingerprintSensorHandle {
 
 					currentOwnerRegTempBase64="libzkfp:"+_retLen[0]+":"+FingerprintSensorEx.BlobToBase64(regTemp, _retLen[0]);
 
+					
+					if(bCollection){
+//						int retSetParam = FingerprintSensorEx.DBSetParameter(mhDB,  102, 0);			
+//						if(retSetParam!=0){
+//							cmdPrompt = "SetParameter(102,0) failed,ret="+ret;
+//						}
+					}else{ 
+					if(currentOwner==null || currentOwner.trim().equals("")){
+						currentOwner=""+(iFid-1);
+					}
 					String bmpFilePath="..\\fingerprint\\collect\\fingerprint-"+currentOwner+"-"+new SimpleDateFormat("yyyyMMdd-HHmmss-SSS").format(new Date())+".bmp";
 					String txtFilePath="..\\fingerprint\\collect-base64\\fingerprint-"+currentOwner+"-"+new SimpleDateFormat("yyyyMMdd-HHmmss-SSS").format(new Date())+"-DBMerge-"+_retLen[0]+".txt";
 					try {
@@ -676,6 +730,7 @@ public class FingerprintSensorHandle {
 					vo.setName(bmpFilePath);
 					vo.setData(lastRegTemp);
 					fingerprintArry.add(vo);
+					}
 				} else {
 					cmdPrompt = "enroll fail, error code=" + ret;
 				}
@@ -869,7 +924,7 @@ public class FingerprintSensorHandle {
 		return abyte;
 	}
 
-	private static void FreeSensor() {
+	public static void FreeSensor() {
 		mbStop = true;
 		try { // wait for thread stopping
 			Thread.sleep(1000);
@@ -886,5 +941,11 @@ public class FingerprintSensorHandle {
 			mhDevice = 0;
 		}
 		FingerprintSensorEx.Terminate();
+		manufacturer = "";
+		deviceCount = 0;
+		cmdPrompt = "";
+		while(fingerprintArry.size()>0){
+			fingerprintArry.remove(0);
+		}
 	}
 }

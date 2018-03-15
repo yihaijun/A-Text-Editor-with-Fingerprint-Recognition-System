@@ -35,6 +35,10 @@
 		class="com.tisson.fingerprint.FingerprintSensorTool.sfipappsample.HellWordBeanImpl" >
 	</bean>
 
+	<bean id="fingerprintUtilsImpl"
+		class="com.tisson.fingerprint.FingerprintSensorTool.FingerprintUtilsImpl" >
+	</bean>
+
 	<sfip:callOtherAppBean id="hellWordBeanSfip"
 		appName="tisson-sfip-app-FingerprintSensorTool*"
 		beanName="hellWordBeanImpl"
