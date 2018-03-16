@@ -600,16 +600,17 @@ public class FingerprintSensorHandle {
 		public void run() {
 			super.run();
 			int ret = 0;
+		try {
 			while (!mbStop) {
 				templateLen[0] = 2048;
 
-				if(log.isInfoEnabled()){
+				if(log.isTraceEnabled()){
 					log.trace("FingerprintSensorEx.AcquireFingerprint begin ...");
 				}
 				ret = FingerprintSensorEx.AcquireFingerprint(
 						mhDevice, imgbuf, template, templateLen);
-				if(log.isInfoEnabled()){
-					log.trace("FingerprintSensorEx.AcquireFingerprint return "+ret);
+				if(log.isTraceEnabled()){
+					log.trace("FingerprintSensorEx.AcquireFingerprint return "+ret+",nFakeFunOn="+nFakeFunOn);
 				}
 
 				if (0 == (ret)) {
@@ -619,8 +620,14 @@ public class FingerprintSensorHandle {
 						size[0] = 4;
 						int nFakeStatus = 0;
 						// GetFakeStatus
+						if(log.isTraceEnabled()){
+							log.trace("GetParameters("+mhDevice+", 2004) begin...");
+						}
 						ret = FingerprintSensorEx.GetParameters(mhDevice, 2004,
 								paramValue, size);
+						if(log.isTraceEnabled()){
+							log.trace("GetParameters("+mhDevice+", 2004) return "+ret);
+						}
 						nFakeStatus = byteArrayToInt(paramValue);
 						if (0 == ret && (byte) (nFakeStatus & 31) != 31) {
 							cmdPrompt = "Is a fake-finer?";
@@ -643,10 +650,13 @@ public class FingerprintSensorHandle {
 				}
 
 			}
+		} catch (Throwable e) {
+			log.error("",e);
 		}
+	}
 
-		private void runOnUiThread(Runnable runnable) {
-		}
+	private void runOnUiThread(Runnable runnable) {
+	}
 	}
 
 	private static void OnCatpureOK(byte[] imgBuf) {
@@ -654,7 +664,7 @@ public class FingerprintSensorHandle {
 			writeBitmap(imgBuf, fpWidth, fpHeight, "..\\fingerprint\\fingerprint.bmp");
 			// btnImg.setIcon(new ImageIcon(ImageIO.read(new
 			// File("fingerprint.bmp"))));
-		} catch (IOException e) {
+		} catch (Throwable e) {
 			log.error("",e);
 		}
 	}
@@ -675,14 +685,24 @@ public class FingerprintSensorHandle {
 					return;
 				}
 			}
-			if (enroll_idx > 0
-					&& FingerprintSensorEx.DBMatch(mhDB,
-							regtemparray[enroll_idx - 1], template) <= 0) {
-				cmdPrompt = "please press the same finger 3 times for the enrollment";
-				enroll_idx = 0;
-				return;
+			if (enroll_idx > 0 && enroll_idx<regtemparray.length){
+				if(log.isTraceEnabled()){
+					log.trace("FingerprintSensorEx.DBMatch begin...");
+				}
+				ret = FingerprintSensorEx.DBMatch(mhDB,
+							regtemparray[enroll_idx - 1], template);
+				if(log.isTraceEnabled()){
+					log.trace("FingerprintSensorEx.DBMatch return "+ret);
+				}
+				if(ret<= 0) {
+					cmdPrompt = "please press the same finger 3 times for the enrollment";
+					enroll_idx = 0;
+					return;
+				}
 			}
-			System.arraycopy(template, 0, regtemparray[enroll_idx], 0, 2048);
+			if(enroll_idx<regtemparray.length){
+				System.arraycopy(template, 0, regtemparray[enroll_idx], 0, 2048);
+			}
 			enroll_idx++;
 			if (enroll_idx == 3) {
 				int[] _retLen = new int[1];
@@ -692,9 +712,16 @@ public class FingerprintSensorHandle {
 				if(bRegister){
 					iFid= java.lang.Math.max(iFid,FingerprintSensorEx.DBCount(mhDevice)+1);
 				}
-				if (0 == (ret = FingerprintSensorEx.DBMerge(mhDB,
+				if(log.isTraceEnabled()){
+					log.trace("FingerprintSensorEx.DBMerge begin...");
+				}
+				ret = FingerprintSensorEx.DBMerge(mhDB,
 						regtemparray[0], regtemparray[1], regtemparray[2],
-						regTemp, _retLen))
+						regTemp, _retLen);
+				if(log.isTraceEnabled()){
+					log.trace("FingerprintSensorEx.DBMerge return "+ret);
+				}
+				if (0 == ret
 						&& 0 == (ret = (bCollection?0:FingerprintSensorEx.DBAdd(mhDB, iFid,
 								regTemp)))) {
 					if(bRegister){
