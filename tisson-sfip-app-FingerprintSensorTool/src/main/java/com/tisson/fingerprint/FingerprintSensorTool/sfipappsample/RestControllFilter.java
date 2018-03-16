@@ -31,9 +31,9 @@ public class RestControllFilter implements ContainerRequestFilter,
 	public void filter(ContainerRequestContext containerRequestContext,
 			ContainerResponseContext containerResponseContext)
 			throws IOException {
-		if (log.isTraceEnabled()) {
-			log.trace("method=" + containerRequestContext.getMethod());
-		}
+//		if (log.isTraceEnabled()) {
+//			log.trace("method=" + containerRequestContext.getMethod());
+//		}
 		if (containerRequestContext.getMethod().equals("OPTIONS")) {
 			containerResponseContext.getHeaders().add(
 					"Access-Control-Allow-Origin", "*");

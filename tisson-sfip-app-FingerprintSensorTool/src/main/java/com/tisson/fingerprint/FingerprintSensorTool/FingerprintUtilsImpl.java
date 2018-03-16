@@ -38,7 +38,7 @@ public class FingerprintUtilsImpl implements FingerprintUtilsInf{
     @POST
     @Path("helloWord")
 	public HelloWordResponse helloWord(HelloWordRequest msg) {
-	       if(log.isTraceEnabled()){
+	       if(log.isTraceEnabled() && !msg.getBeanName().equalsIgnoreCase("getCmdPrompt")){
 	    	   log.trace(msg.toString());
 	       }
 			HelloWordResponse response = new HelloWordResponse();

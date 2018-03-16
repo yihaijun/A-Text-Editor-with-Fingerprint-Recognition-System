@@ -10,3 +10,4 @@ bin
 /tisson-sfip-app-FingerprintSensorTool/target/maven-archiver
 /tisson-sfip-app-FingerprintSensorTool/target/test-classes
 /tisson-sfip-app-FingerprintSensorTool/target
+/tisson-sfip-app-FingerprintSensorTool/sfipLogsPath_IS_UNDEFINED

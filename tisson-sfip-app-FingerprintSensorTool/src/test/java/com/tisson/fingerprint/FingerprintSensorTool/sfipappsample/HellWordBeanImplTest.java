@@ -13,6 +13,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.tisson.sfip.module.reboot.SfipContainerWrapper;
 import com.tisson.sfip.module.util.serviceapitest.LoadTestUseCasesArray;
 import com.tisson.sfip.module.util.serviceapitest.SfipServiceResponseSample;
 import com.tisson.sfip.module.util.serviceapitest.TestResult;
@@ -30,7 +31,31 @@ public class HellWordBeanImplTest  implements ApplicationContextAware {
 	@Autowired
 	protected LoadTestUseCasesArray loadTestUseCasesArray;
 
-//	@Override
+	//这个main函数不是单元测试,是为了支持在eclipse等开发环境调试
+	//但如果在开发阶段不需要关注
+	//         <sfip:callOtherAppBean id="...这样配置Spring Bean
+	//就不需要用到这个函数,直接运行单元测试就行了
+	//运行这个函数,请注意在eclipset等IDE的debug configurations窗口配置
+	//arguments 的VM arguments 上加上-Dsfip.home=XXXX\sfip-standalone-1.0.6(你的sfip平台目录)
+	//classpath 的Use Entries  上加上你的sfip平台的config目录和所有lib目录下的jar
+	public static void main(String[] args) throws Exception{
+		  new SfipContainerWrapper().start(args);
+	  }
+
+	@Test
+	public void testHelloWord() {
+		try {
+			test("src/test/resources/testUseCases/hellWordBeanSfip-helloWord-junit-TST0000000000.txt");
+		} catch (Throwable e1) {
+			e1.printStackTrace();
+		}
+		try {
+			Thread.currentThread().sleep(1000L*1000L);
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public void setApplicationContext(ApplicationContext applicationContext)
 			throws BeansException {
 		this.applicationContext = applicationContext;
@@ -55,20 +80,6 @@ public class HellWordBeanImplTest  implements ApplicationContextAware {
 
 	}
 
-	@Test
-	public void testHelloWord() {
-		System.out.println("kkkkkk");
-		try {
-			test("src/test/resources/testUseCases/hellWordBeanSfip-helloWord-junit-TST0000000000.txt");
-		} catch (Throwable e1) {
-			e1.printStackTrace();
-		}
-		try {
-			Thread.currentThread().sleep(1000L*1000L);
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
-	}
 		/**
      * Rigourous Test :-)
      */

@@ -70,7 +70,6 @@ public class FingerprintSensorHandle {
 
 	private static String currentOwner="";
 	private static String currentOwnerRegTempBase64="";
-
 	
 	/**
 	 * @return the currentOwnerRegTempBase64
@@ -127,6 +126,7 @@ public class FingerprintSensorHandle {
 			FreeSensor();
 			return 0;
 		}
+		log.info("mhDevice="+mhDevice);
 		if (0 == (mhDB = FingerprintSensorEx.DBInit())) {
 			log.info("[" + df.format(new Date()) + "] Init DB fail, ret = "
 					+ ret + "!");
@@ -602,8 +602,17 @@ public class FingerprintSensorHandle {
 			int ret = 0;
 			while (!mbStop) {
 				templateLen[0] = 2048;
-				if (0 == (ret = FingerprintSensorEx.AcquireFingerprint(
-						mhDevice, imgbuf, template, templateLen))) {
+
+				if(log.isInfoEnabled()){
+					log.trace("FingerprintSensorEx.AcquireFingerprint begin ...");
+				}
+				ret = FingerprintSensorEx.AcquireFingerprint(
+						mhDevice, imgbuf, template, templateLen);
+				if(log.isInfoEnabled()){
+					log.trace("FingerprintSensorEx.AcquireFingerprint return "+ret);
+				}
+
+				if (0 == (ret)) {
 					if (nFakeFunOn == 1) {
 						byte[] paramValue = new byte[4];
 						int[] size = new int[1];
@@ -613,10 +622,12 @@ public class FingerprintSensorHandle {
 						ret = FingerprintSensorEx.GetParameters(mhDevice, 2004,
 								paramValue, size);
 						nFakeStatus = byteArrayToInt(paramValue);
-						// log.info("ret = "+ ret +",nFakeStatus=" +
-						// nFakeStatus);
 						if (0 == ret && (byte) (nFakeStatus & 31) != 31) {
 							cmdPrompt = "Is a fake-finer?";
+							log.warn("ret = "+ ret +",nFakeStatus=" + nFakeStatus+",Is a fake-finer?");
+							if(log.isInfoEnabled()){
+								log.trace(cmdPrompt);
+							}
 							return;
 						}
 					}
@@ -624,7 +635,6 @@ public class FingerprintSensorHandle {
 					OnExtractOK(template, templateLen[0]);
 					log.info(cmdPrompt);
 				} else {
-					// log.info("FingerprintSensorEx.AcquireFingerprint return "+ret);
 				}
 				try {
 					Thread.sleep(500);
@@ -650,18 +660,20 @@ public class FingerprintSensorHandle {
 	}
 
 	private static void OnExtractOK(byte[] template, int len) {
-		
 		if (bRegister || bCollection) {
-			int[] fid = new int[1];
-			int[] score = new int[1];
-			int ret = FingerprintSensorEx
+			int ret = 0;
+			if(bRegister){
+				int[] fid = new int[1];
+				int[] score = new int[1];
+				ret = FingerprintSensorEx
 					.DBIdentify(mhDB, template, fid, score);
-			if (ret == 0  && !bCollection) {
-				cmdPrompt = "the finger already enroll by " + fid[0]
+				if (ret == 0) {
+					cmdPrompt = "the finger already enroll by " + fid[0]
 						+ ",cancel enroll";
 //				bRegister = false;
-				enroll_idx = 0;
-				return;
+					enroll_idx = 0;
+					return;
+				}
 			}
 			if (enroll_idx > 0
 					&& FingerprintSensorEx.DBMatch(mhDB,
@@ -677,31 +689,27 @@ public class FingerprintSensorHandle {
 				_retLen[0] = 2048;
 				byte[] regTemp = new byte[_retLen[0]];
 
-				iFid= java.lang.Math.max(iFid,FingerprintSensorEx.DBCount(mhDevice)+1);
+				if(bRegister){
+					iFid= java.lang.Math.max(iFid,FingerprintSensorEx.DBCount(mhDevice)+1);
+				}
 				if (0 == (ret = FingerprintSensorEx.DBMerge(mhDB,
 						regtemparray[0], regtemparray[1], regtemparray[2],
 						regTemp, _retLen))
 						&& 0 == (ret = (bCollection?0:FingerprintSensorEx.DBAdd(mhDB, iFid,
 								regTemp)))) {
-					if(!bCollection){
+					if(bRegister){
 						iFid++;
 					}
 					cbRegTemp = _retLen[0];
 					System.arraycopy(regTemp, 0, lastRegTemp, 0, cbRegTemp);
 					// Base64 Template
 					cmdPrompt = "enroll succ";
-//					final sun.misc.BASE64Encoder encoder = new sun.misc.BASE64Encoder();
-//					final sun.misc.BASE64Decoder decoder = new sun.misc.BASE64Decoder();
-//					currentOwnerRegTempBase64=encoder.encode(lastRegTemp);
 
 					currentOwnerRegTempBase64="libzkfp:"+_retLen[0]+":"+FingerprintSensorEx.BlobToBase64(regTemp, _retLen[0]);
 
 					
 					if(bCollection){
-//						int retSetParam = FingerprintSensorEx.DBSetParameter(mhDB,  102, 0);			
-//						if(retSetParam!=0){
-//							cmdPrompt = "SetParameter(102,0) failed,ret="+ret;
-//						}
+
 					}else{ 
 					if(currentOwner==null || currentOwner.trim().equals("")){
 						currentOwner=""+(iFid-1);

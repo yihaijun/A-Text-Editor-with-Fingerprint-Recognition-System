@@ -1,5 +1,6 @@
 <!-- Assembly descriptor for the full account-system distribution. -->
 <assembly>
+	<id>assembly</id>
 	<formats>
 		<format>zip</format>
 	</formats>
