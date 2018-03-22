@@ -1,7 +1,7 @@
 package com.tisson.fingerprint.FingerprintSensorTool.sfipappsample;
 
 
-import static org.junit.Assert.fail;
+import lombok.extern.slf4j.Slf4j;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -13,14 +13,12 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.tisson.fingerprint.FingerprintSensorTool.RtsEvent;
 import com.tisson.sfip.module.reboot.SfipContainerWrapper;
 import com.tisson.sfip.module.util.serviceapitest.LoadTestUseCasesArray;
 import com.tisson.sfip.module.util.serviceapitest.SfipServiceResponseSample;
 import com.tisson.sfip.module.util.serviceapitest.TestResult;
 import com.tisson.sfip.module.util.serviceapitest.TestUseCases;
-
-import javax.annotation.Resource;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -39,9 +37,18 @@ public class HellWordBeanImplTest  implements ApplicationContextAware {
 	//arguments 的VM arguments 上加上-Dsfip.home=XXXX\sfip-standalone-1.0.6(你的sfip平台目录)
 	//classpath 的Use Entries  上加上你的sfip平台的config目录和所有lib目录下的jar
 	public static void main(String[] args) throws Exception{
-		  new SfipContainerWrapper().start(args);
-	  }
+		new SfipContainerWrapper().start(args);
+	}
 
+	private RtsEvent rtsEvent = new RtsEvent();
+	WorkThread th =new WorkThread();
+
+	private class WorkThread extends Thread {
+		public void run() {
+			System.out.println("kkkk="+rtsEvent.waitEvent(2000));
+		}
+	}
+	
 	@Test
 	public void testHelloWord() {
 		try {

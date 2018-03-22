@@ -16,10 +16,32 @@
         }
     </style>
     <script>
-	    function getMsgResult(msg){
+        var url="http://127.0.0.1:29093/services/tisson/FingerprintUtils/call";
+	    function myStrEqual(src1,src2){
+	    	if(src1.indexOf(src2) >= 0){
+	    		return true;
+	    	}else{
+	    		return false;
+	    	}
+	    }
+
+        function getResponseCode(msg){
+		//{"statusCompletion":2,"responseCode":"FPU0099000003","result":"l","responseContent":""}
+	    	var pos,pos2,len;
+			pos=msg.indexOf("\"responseCode\":\"")+16;
+			pos2=msg.indexOf("\",\"result\"")
+			if(pos2>pos){
+				return msg.substr(pos,pos2-pos);
+			}
+			len=msg.indexOf(",\"responseContent\":\"")-pos;
+			return msg.substr(pos,len);
+	    }
+
+        function getMsgResult(msg){
+        	//{"statusCompletion":0,"responseCode":"FPU0000000000","result":"ZKTeco Inc.SLK20R(SN=3832173300917),3,SfipHome=D:\\tmp\\sfip-standalone-1.0.6-min\\sfip-standalone-1.0.6-min\\bin\\..","responseContent":""}
 		    var pos,len;
 			pos=msg.indexOf("\"result\":\"")+10;
-			len=msg.indexOf("\",\"responseCode\":\"")-pos;
+			len=msg.indexOf("\",\"responseContent\":\"")-pos;
             if(parent!=null && parent.document.getElementById("FingerprintInfo") !=null){
             	parent.document.getElementById("FingerprintInfo").value =msg.substr(pos,len); 
     		}
@@ -37,7 +59,7 @@
             	cmdTimer = null, cmdEnrollProgressBarValue = 0,
             	getCmdPromptTimer = null,
             	httpLoad = null,httpGetCmdPrompt=null,
-            	sfipHome="",
+            	sfipHome="",cmdErrorCode="",
                 searchStr = location.search,searchStr,searchs,address;  
             
                 
@@ -52,7 +74,7 @@
 
             getCmdPromptTimer = setInterval( function(){
             	 var i = Math.random(); 
-            	document.getElementById("fingerprintBmp").src="file:///"+sfipHome+"/fingerprint/fingerprint.bmp?i="+i;
+            	document.getElementById("fingerprintBmp").src="file:///"+sfipHome+"/external/fingerprint/fingerprint.bmp?i="+i;
             }, 800 );
             
             if(window.ActiveXObject){
@@ -75,18 +97,17 @@
             //httpLoad.upload.onprogress = function(e) {};
             httpLoad.onreadystatechange = function(e) {
 				if(this.status == 200||this.status == 304){
-					document.getElementById("infFingerprintSensor").value=getMsgResult(this.responseText);
-						pos=this.responseText.indexOf("SfipHome=")+9;
-						len =this.responseText.indexOf("\",\"responseCode\":\"")-pos;
-						sfipHome=this.responseText.substr(pos,len);
-						while(sfipHome.indexOf("\\\\")>=0){
-							sfipHome=sfipHome.replace("\\\\","/");
-						}
-						sfipHome=sfipHome;
+					document.getElementById("infFingerprintSensor").value = getMsgResult(this.responseText);
+					pos=this.responseText.indexOf("SfipHome=")+9;
+					len =this.responseText.indexOf("\",\"responseContent\":\"")-pos;
+					sfipHome=this.responseText.substr(pos,len);
+					while(sfipHome.indexOf("\\\\")>=0){
+						sfipHome=sfipHome.replace("\\\\","/");
+					}
 				}
 			};
 			httpLoad.onerror = function(e) { document.getElementById("cmdError").value=e; };
-			httpLoad.open("POST","http://127.0.0.1:29093/services/tisson/FingerprintUtilsInf/helloWord",true);
+			httpLoad.open("POST",url,true);
 			//httpLoad.open("POST","http://172.16.28.126:29093/services/tisson/FingerprintUtilsInf/helloWord",true);
         	httpLoad.timeout = 50000;
         	httpLoad.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
@@ -120,7 +141,7 @@
 					}
 				};
 				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
-				xmlhttp.open("POST","http://127.0.0.1:29093/services/tisson/FingerprintUtilsInf/helloWord",true);
+				xmlhttp.open("POST",url,true);
 	        	xmlhttp.timeout = 50000;
 	        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 				xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdCollection\",\"msg\":\"\"}");
@@ -130,63 +151,68 @@
                	cmdTimer = setInterval( function(){
                		cmdEnrollProgressBarValue = parseInt( getStyle( barEnrollProgress, 'width' ) );
                    	if ( cmdEnrollProgressBarValue < 500 ) {
-   	                    httpGetCmdPrompt=new XMLHttpRequest();
-   	    	            httpLoad.onload = function(e) {};
-   	    	            httpLoad.ontimeout = function(e) {};
-   	    	            httpLoad.onerror = function(e) {};
-   	    	            //httpLoad.upload.onprogress = function(e) {};
-   	    	            httpLoad.onreadystatechange = function(e) {
-   	    					if(this.status == 200||this.status == 304){
-   	    						document.getElementById("cmdPrompt").value=getMsgResult(this.responseText);
+   	                    httpGetCurrentOwnerRegTempBase64=new XMLHttpRequest();
+   	    	            httpGetCurrentOwnerRegTempBase64.onload = function(e) {};
+   	    	            httpGetCurrentOwnerRegTempBase64.ontimeout = function(e) {};
+   	    	            httpGetCurrentOwnerRegTempBase64.onerror = function(e) {};
+   	    	            //httpGetCurrentOwnerRegTempBase64.upload.onprogress = function(e) {};
+   	    	            httpGetCurrentOwnerRegTempBase64.onreadystatechange = function(e) {
+   	    					if(this.status == 200||this.status == 304 ){
 //   	                   		barEnrollProgress.style.width = barEnrollProgress.offsetWidth + 10 + 'px';
 //   	                    	barEnrollProgress.innerHTML = parseInt( getStyle( barEnrollProgress, 'width' ) ) / 5 + '%';
-                                if(this.responseText.indexOf("please press the same finger 3 times for the enrollment")>=0){
+// 				document.getElementById("infFingerprintSensor").value ="kkkk"+this.responseText  +"["+getResponseCode(this.responseText)+"]["+this.responseText+"]";
+ 								cmdErrorCode=getResponseCode(this.responseText);
+ 								document.getElementById("cmdError").value="错误码:"+cmdErrorCode;
+    	                		document.getElementById("cmdResult").value=getMsgResult(this.responseText);
+ 								if(cmdErrorCode==""){
+           	                		document.getElementById("cmdResult").value="错误:"+getMsgResult(this.responseText);
+ 								}else if(cmdErrorCode=="FPU0099000003"){
+                                	barEnrollProgress.style.width = '50px'
+                                   	barEnrollProgress.innerHTML = '10%'
+             	    				document.getElementById("cmdPrompt").value="请按同一个手指3次";
+								}else if(cmdErrorCode=="FPU0199000003"){
                                 	barEnrollProgress.style.width = '50px'
                                 	barEnrollProgress.innerHTML = '10%'
-                                }else if(this.responseText.indexOf("the finger already enroll by")>=0){
-                                   	barEnrollProgress.style.width = '50px'
-                                   	barEnrollProgress.innerHTML = '10%'
-                                }else if(this.responseText.indexOf("You need to press the 2 times fingerprint")>=0){
+           	    					document.getElementById("cmdPrompt").value="请按同一个手指3次";
+								}else if(cmdErrorCode=="FPU0099000002"){
                                 	barEnrollProgress.style.width = (33 * 5) +'px'
                                     barEnrollProgress.innerHTML = '33%'
-                                }else if(this.responseText.indexOf("You need to press the 1 times fingerprint")>=0){
+               	    				document.getElementById("cmdPrompt").value="请再继续按同一个手指2次";
+                                }else if (cmdErrorCode=="FPU0199000002"){
+                                	barEnrollProgress.style.width = (33 * 5) +'px'
+                                    barEnrollProgress.innerHTML = '33%'
+               	    				document.getElementById("cmdPrompt").value="请再继续按同一个手指2次";
+                                }else if(cmdErrorCode=="FPU0099000001"){
                                 	barEnrollProgress.style.width = (33 * 5 *2) +'px'
                                     barEnrollProgress.innerHTML = '66%'
-                                }else if(this.responseText.indexOf("enroll succ")>=0){
-                                	barEnrollProgress.style.width = '500px'
-                                    barEnrollProgress.innerHTML = '100%'
-                        			clearInterval( cmdTimer );
-    								var xmlhttp2=null;
-    								xmlhttp2=new XMLHttpRequest();
-    					            xmlhttp2.onload = function(e) {};
-    					            xmlhttp2.ontimeout = function(e) {};
-    					            xmlhttp2.onerror = function(e) {};
-    					            //xmlhttp.upload.onprogress = function(e) {};
-    					            xmlhttp2.onreadystatechange = function(e) {
-    									if(this.status == 200||this.status == 304){
-    										document.getElementById("cmdResult").value=getMsgResult(this.responseText);
-    										cmdEnroll.disabled=false;
-    										cmdIdentify.disabled=false;
-    										cmdVerify.disabled=false;
-    										cmdTxtVerify.disabled=false;
-    										cmdCollection.disabled=false;
-   									}
-    								};
-    								xmlhttp2.onerror = function(e) { document.getElementById("cmdError").value=e; };
-    								xmlhttp2.open("POST","http://127.0.0.1:29093/services/tisson/FingerprintUtilsInf/helloWord",true);
-    					        	xmlhttp2.timeout = 50000;
-    					        	xmlhttp2.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-    								xmlhttp2.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwnerRegTempBase64\",\"msg\":\"\"}");
-                                }
+                   	    			document.getElementById("cmdPrompt").value="请再继续按同一个手指1次";
+                               }else if(cmdErrorCode=="FPU0199000001"){
+                                	barEnrollProgress.style.width = (33 * 5 *2) +'px'
+                                    barEnrollProgress.innerHTML = '66%'
+                   	    			document.getElementById("cmdPrompt").value="请再继续按同一个手指1次";
+                               }else{
+                          			clearInterval( cmdTimer );
+									cmdEnroll.disabled=false;
+									cmdIdentify.disabled=false;
+									cmdVerify.disabled=false;
+									cmdTxtVerify.disabled=false;
+									cmdCollection.disabled=false;
+                                	if(cmdErrorCode=="FPU0100000000" || cmdErrorCode=="FPU0100000004" || cmdErrorCode=="FPU0000000000" || cmdErrorCode=="FPU0000000004"){
+	                                	barEnrollProgress.style.width = '500px'
+    	                                barEnrollProgress.innerHTML = '100%'
+        	           	    			document.getElementById("cmdPrompt").value="";
+            	                		document.getElementById("cmdResult").value=getMsgResult(this.responseText);
+                                	}
+    	    					}
    	    					}
    	    				};
-   	    				httpLoad.onerror = function(e) { document.getElementById("cmdError").value=e; };
-   	    				httpLoad.open("POST","http://127.0.0.1:29093/services/tisson/FingerprintUtilsInf/helloWord",true);
-   	    	        	httpLoad.timeout = 50000;
-   	    	        	httpLoad.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-   	    				httpLoad.send("{\"appName\":\"\",\"beanName\":\"getCmdPrompt\",\"msg\":\"\"}");
-                   	}
-               	}, 1000 );
+   	    				httpGetCurrentOwnerRegTempBase64.onerror = function(e) { document.getElementById("cmdError").value=e; };
+   	    				httpGetCurrentOwnerRegTempBase64.open("POST",url,true);
+   	    	        	httpGetCurrentOwnerRegTempBase64.timeout = 50000;
+   	    	        	httpGetCurrentOwnerRegTempBase64.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+   	    				httpGetCurrentOwnerRegTempBase64.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwnerRegTempBase64\",\"msg\":\"\"}");
+                	}
+               	}, 100 );
            	}
 
    			cmdEnroll.onclick = function(){
@@ -209,7 +235,7 @@
 					}
 				};
 				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
-				xmlhttp.open("POST","http://127.0.0.1:29093/services/tisson/FingerprintUtilsInf/helloWord",true);
+				xmlhttp.open("POST",url,true);
 	        	xmlhttp.timeout = 50000;
 	        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 				xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdEnroll\",\"msg\":\""+document.getElementById("cmdInput").value+"\"}");
@@ -220,11 +246,11 @@
                		cmdEnrollProgressBarValue = parseInt( getStyle( barEnrollProgress, 'width' ) );
                    	if ( cmdEnrollProgressBarValue < 500 ) {
    	                    httpGetCmdPrompt=new XMLHttpRequest();
-   	    	            httpLoad.onload = function(e) {};
-   	    	            httpLoad.ontimeout = function(e) {};
-   	    	            httpLoad.onerror = function(e) {};
-   	    	            //httpLoad.upload.onprogress = function(e) {};
-   	    	            httpLoad.onreadystatechange = function(e) {
+   	    	            httpGetCmdPrompt.onload = function(e) {};
+   	    	            httpGetCmdPrompt.ontimeout = function(e) {};
+   	    	            httpGetCmdPrompt.onerror = function(e) {};
+   	    	            //httpGetCmdPrompt.upload.onprogress = function(e) {};
+   	    	            httpGetCmdPrompt.onreadystatechange = function(e) {
    	    					if(this.status == 200||this.status == 304){
    	    						document.getElementById("cmdPrompt").value=getMsgResult(this.responseText);
 //   	                   		barEnrollProgress.style.width = barEnrollProgress.offsetWidth + 10 + 'px';
@@ -262,18 +288,18 @@
    									}
     								};
     								xmlhttp2.onerror = function(e) { document.getElementById("cmdError").value=e; };
-    								xmlhttp2.open("POST","http://127.0.0.1:29093/services/tisson/FingerprintUtilsInf/helloWord",true);
+    								xmlhttp2.open("POST",url,true);
     					        	xmlhttp2.timeout = 50000;
     					        	xmlhttp2.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     								xmlhttp2.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwnerRegTempBase64\",\"msg\":\"\"}");
                                 }
    	    					}
    	    				};
-   	    				httpLoad.onerror = function(e) { document.getElementById("cmdError").value=e; };
-   	    				httpLoad.open("POST","http://127.0.0.1:29093/services/tisson/FingerprintUtilsInf/helloWord",true);
-   	    	        	httpLoad.timeout = 50000;
-   	    	        	httpLoad.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-   	    				httpLoad.send("{\"appName\":\"\",\"beanName\":\"getCmdPrompt\",\"msg\":\"\"}");
+   	    				httpGetCmdPrompt.onerror = function(e) { document.getElementById("cmdError").value=e; };
+   	    				httpGetCmdPrompt.open("POST",url,true);
+   	    	        	httpGetCmdPrompt.timeout = 50000;
+   	    	        	httpGetCmdPrompt.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+   	    				httpGetCmdPrompt.send("{\"appName\":\"\",\"beanName\":\"getCmdPrompt\",\"msg\":\"\"}");
                    	}
                	}, 1000 );
            	}
@@ -298,18 +324,18 @@
 					}
 				};
 				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
-				xmlhttp.open("POST","http://127.0.0.1:29093/services/tisson/FingerprintUtilsInf/helloWord",true);
+				xmlhttp.open("POST",url,true);
 	        	xmlhttp.timeout = 50000;
 	        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 				xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdIdentify\",\"msg\":\"\"}");
 
    				cmdTimer = setInterval( function(){
                     httpGetCmdPrompt=new XMLHttpRequest();
-    	            httpLoad.onload = function(e) {};
-    	            httpLoad.ontimeout = function(e) {};
-    	            httpLoad.onerror = function(e) {};
-    	            //httpLoad.upload.onprogress = function(e) {};
-    	            httpLoad.onreadystatechange = function(e) {
+    	            httpGetCmdPrompt.onload = function(e) {};
+    	            httpGetCmdPrompt.ontimeout = function(e) {};
+    	            httpGetCmdPrompt.onerror = function(e) {};
+    	            //httpGetCmdPrompt.upload.onprogress = function(e) {};
+    	            httpGetCmdPrompt.onreadystatechange = function(e) {
     					if(this.status == 200||this.status == 304){
     						document.getElementById("cmdPrompt").value=getMsgResult(this.responseText);
 							if(this.responseText.indexOf("Identify suc")>=0  || this.responseText.indexOf("Identify fail")>=0 ){
@@ -333,18 +359,18 @@
 									}
 								};
 								xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
-								xmlhttp.open("POST","http://127.0.0.1:29093/services/tisson/FingerprintUtilsInf/helloWord",true);
+								xmlhttp.open("POST",url,true);
 					        	xmlhttp.timeout = 50000;
 					        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 								xmlhttp.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwner\",\"msg\":\"\"}");
 							}
     					}
     				};
-    				httpLoad.onerror = function(e) { document.getElementById("cmdError").value=e; };
-    				httpLoad.open("POST","http://127.0.0.1:29093/services/tisson/FingerprintUtilsInf/helloWord",true);
-    	        	httpLoad.timeout = 50000;
-    	        	httpLoad.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-    				httpLoad.send("{\"appName\":\"\",\"beanName\":\"getCmdPrompt\",\"msg\":\"\"}");
+    				httpGetCmdPrompt.onerror = function(e) { document.getElementById("cmdError").value=e; };
+    				httpGetCmdPrompt.open("POST",url,true);
+    	        	httpGetCmdPrompt.timeout = 50000;
+    	        	httpGetCmdPrompt.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    				httpGetCmdPrompt.send("{\"appName\":\"\",\"beanName\":\"getCmdPrompt\",\"msg\":\"\"}");
                	}, 1000 );
 			}
 
@@ -364,7 +390,7 @@
 					}
 				};
 				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
-				xmlhttp.open("POST","http://127.0.0.1:29093/services/tisson/FingerprintUtilsInf/helloWord",true);
+				xmlhttp.open("POST",url,true);
 	        	xmlhttp.timeout = 50000;
 	        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 	        	var inParam=
@@ -396,12 +422,11 @@
 					}
 				};
 				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
-				xmlhttp.open("POST","http://127.0.0.1:29093/services/tisson/FingerprintUtilsInf/helloWord",true);
+				xmlhttp.open("POST",url,true);
 	        	xmlhttp.timeout = 50000;
 	        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 				xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdFreeSensor\",\"msg\":\"\"}");
 			}
-        
         }
  		  </script>
 </head>
