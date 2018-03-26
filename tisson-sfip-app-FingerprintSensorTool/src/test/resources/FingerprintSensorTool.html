@@ -26,26 +26,36 @@
 	    }
 
         function getResponseCode(msg){
+        	if(msg==""){
+        		return ""
+        	}
+        	var objResponse = JSON.parse(msg);
+        	return objResponse.responseCode;
 		//{"statusCompletion":2,"responseCode":"FPU0099000003","result":"l","responseContent":""}
-	    	var pos,pos2,len;
-			pos=msg.indexOf("\"responseCode\":\"")+16;
-			pos2=msg.indexOf("\",\"result\"")
-			if(pos2>pos){
-				return msg.substr(pos,pos2-pos);
-			}
-			len=msg.indexOf(",\"responseContent\":\"")-pos;
-			return msg.substr(pos,len);
+//	    	var pos,pos2,len;
+//			pos=msg.indexOf("\"responseCode\":\"")+16;
+//			pos2=msg.indexOf("\",\"result\"")
+//			if(pos2>pos){
+//				return msg.substr(pos,pos2-pos);
+//			}
+//			len=msg.indexOf(",\"responseContent\":\"")-pos;
+//			return msg.substr(pos,len);
 	    }
 
         function getMsgResult(msg){
+           	if(msg==""){
+        		return ""
+        	}
+          	var objResponse = JSON.parse(msg);
+        	return objResponse.result;
         	//{"statusCompletion":0,"responseCode":"FPU0000000000","result":"ZKTeco Inc.SLK20R(SN=3832173300917),3,SfipHome=D:\\tmp\\sfip-standalone-1.0.6-min\\sfip-standalone-1.0.6-min\\bin\\..","responseContent":""}
-		    var pos,len;
-			pos=msg.indexOf("\"result\":\"")+10;
-			len=msg.indexOf("\",\"responseContent\":\"")-pos;
-            if(parent!=null && parent.document.getElementById("FingerprintInfo") !=null){
-            	parent.document.getElementById("FingerprintInfo").value =msg.substr(pos,len); 
-    		}
-			return msg.substr(pos,len);
+//		    var pos,len;
+//			pos=msg.indexOf("\"result\":\"")+10;
+//			len=msg.indexOf("\",\"responseContent\":\"")-pos;
+//            if(parent!=null && parent.document.getElementById("FingerprintInfo") !=null){
+//            	parent.document.getElementById("FingerprintInfo").value =msg.substr(pos,len); 
+//   		}
+//			return msg.substr(pos,len);
 	    }
         window.onload = function(){
             var cmdEnroll = document.querySelector( "#cmdEnroll" ),
@@ -97,13 +107,18 @@
             //httpLoad.upload.onprogress = function(e) {};
             httpLoad.onreadystatechange = function(e) {
 				if(this.status == 200||this.status == 304){
+				if(this.responseText!=""){
 					document.getElementById("infFingerprintSensor").value = getMsgResult(this.responseText);
-					pos=this.responseText.indexOf("SfipHome=")+9;
-					len =this.responseText.indexOf("\",\"responseContent\":\"")-pos;
-					sfipHome=this.responseText.substr(pos,len);
+					sfipHome=getMsgResult(this.responseText);
+					pos=sfipHome.indexOf("SfipHome=")+9;
+					sfipHome=sfipHome.substr(pos);
+					//pos=this.responseText.indexOf("SfipHome=")+9;
+					//len =this.responseText.indexOf("\",\"responseContent\":\"")-pos;
+					//sfipHome=this.responseText.substr(pos,len);
 					while(sfipHome.indexOf("\\\\")>=0){
 						sfipHome=sfipHome.replace("\\\\","/");
 					}
+				}
 				}
 			};
 			httpLoad.onerror = function(e) { document.getElementById("cmdError").value=e; };

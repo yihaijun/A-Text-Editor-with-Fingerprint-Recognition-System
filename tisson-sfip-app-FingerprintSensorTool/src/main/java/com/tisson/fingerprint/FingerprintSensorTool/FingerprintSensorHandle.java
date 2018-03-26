@@ -104,6 +104,9 @@ public class FingerprintSensorHandle {
 	}
 	
 	private FingerprintSensorHandle(){
+		String cmd="echo [%date% %time%] new FingerprintSensorHandle() java.library.path="+System.getProperty("java.library.path") + " >>..\\sfip-oam.log";
+		com.tisson.sfip.module.util.SystemUtil.callcmd(new String[] {cmd}, "utf-8");
+		
 		fingerprintArry = new java.util.ArrayList<FingerprintVo>();
 		unknowFingerprintArry = new java.util.ArrayList<FingerprintVo>();
 		enrollState = STATE_NO_CMD;
