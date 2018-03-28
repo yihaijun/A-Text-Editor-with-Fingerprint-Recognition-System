@@ -64,6 +64,8 @@
             	cmdTxtVerify = document.querySelector( "#cmdTxtVerify" ),
             	cmdCollection = document.querySelector( "#cmdCollection" ),
             	cmdFreeSensor = document.querySelector( "#cmdFreeSensor" ),
+            	cmdDel = document.querySelector( "#cmdDel" ),
+            	
             	barEnrollProgress = document.querySelector( "#barEnrollProgress" ),
             	
             	cmdTimer = null, cmdEnrollProgressBarValue = 0,
@@ -142,6 +144,7 @@
 				cmdVerify.disabled=true;
 				cmdTxtVerify.disabled=true;
 				cmdCollection.disabled=true;
+				cmdDel.disabled=true;
 				document.getElementById("cmdPrompt").value="请你按同一个手指三次!";
 				document.getElementById("cmdResult").value="";
 				clearInterval( cmdTimer );
@@ -206,12 +209,14 @@
                                     barEnrollProgress.innerHTML = '66%'
                    	    			document.getElementById("cmdPrompt").value="请再继续按同一个手指1次";
                                }else{
+                  	    			document.getElementById("cmdPrompt").value="";
                           			clearInterval( cmdTimer );
 									cmdEnroll.disabled=false;
 									cmdIdentify.disabled=false;
 									cmdVerify.disabled=false;
 									cmdTxtVerify.disabled=false;
 									cmdCollection.disabled=false;
+									cmdDel.disabled=false;
                                 	if(cmdErrorCode=="FPU0100000000" || cmdErrorCode=="FPU0100000004" || cmdErrorCode=="FPU0000000000" || cmdErrorCode=="FPU0000000004"){
 	                                	barEnrollProgress.style.width = '500px'
     	                                barEnrollProgress.innerHTML = '100%'
@@ -236,6 +241,7 @@
 				cmdVerify.disabled=true;
 				cmdTxtVerify.disabled=true;
 				cmdCollection.disabled=true;
+				cmdDel.disabled=true;
 				document.getElementById("cmdPrompt").value="请你按同一个手指三次!";
 				document.getElementById("cmdResult").value="";
 				clearInterval( cmdTimer );
@@ -260,63 +266,70 @@
                	cmdTimer = setInterval( function(){
                		cmdEnrollProgressBarValue = parseInt( getStyle( barEnrollProgress, 'width' ) );
                    	if ( cmdEnrollProgressBarValue < 500 ) {
-   	                    httpGetCmdPrompt=new XMLHttpRequest();
-   	    	            httpGetCmdPrompt.onload = function(e) {};
-   	    	            httpGetCmdPrompt.ontimeout = function(e) {};
-   	    	            httpGetCmdPrompt.onerror = function(e) {};
+                   		httpGetCurrentOwnerRegTempBase64=new XMLHttpRequest();
+                   		httpGetCurrentOwnerRegTempBase64.onload = function(e) {};
+                   		httpGetCurrentOwnerRegTempBase64.ontimeout = function(e) {};
+                   		httpGetCurrentOwnerRegTempBase64.onerror = function(e) {};
    	    	            //httpGetCmdPrompt.upload.onprogress = function(e) {};
-   	    	            httpGetCmdPrompt.onreadystatechange = function(e) {
+   	    	            httpGetCurrentOwnerRegTempBase64.onreadystatechange = function(e) {
    	    					if(this.status == 200||this.status == 304){
-   	    						document.getElementById("cmdPrompt").value=getMsgResult(this.responseText);
 //   	                   		barEnrollProgress.style.width = barEnrollProgress.offsetWidth + 10 + 'px';
 //   	                    	barEnrollProgress.innerHTML = parseInt( getStyle( barEnrollProgress, 'width' ) ) / 5 + '%';
-                                if(this.responseText.indexOf("please press the same finger 3 times for the enrollment")>=0){
+// 				document.getElementById("infFingerprintSensor").value ="kkkk"+this.responseText  +"["+getResponseCode(this.responseText)+"]["+this.responseText+"]";
+ 								cmdErrorCode=getResponseCode(this.responseText);
+ 								document.getElementById("cmdError").value="错误码:"+cmdErrorCode;
+    	                		document.getElementById("cmdResult").value=getMsgResult(this.responseText);
+ 								if(cmdErrorCode==""){
+           	                		document.getElementById("cmdResult").value="错误:"+getMsgResult(this.responseText);
+ 								}else if(cmdErrorCode=="FPU0099000003"){
+                                	barEnrollProgress.style.width = '50px'
+                                   	barEnrollProgress.innerHTML = '10%'
+             	    				document.getElementById("cmdPrompt").value="请按同一个手指3次";
+								}else if(cmdErrorCode=="FPU0199000003"){
                                 	barEnrollProgress.style.width = '50px'
                                 	barEnrollProgress.innerHTML = '10%'
-                                }else if(this.responseText.indexOf("the finger already enroll by")>=0){
-                                   	barEnrollProgress.style.width = '50px'
-                                   	barEnrollProgress.innerHTML = '10%'
-                                }else if(this.responseText.indexOf("You need to press the 2 times fingerprint")>=0){
+           	    					document.getElementById("cmdPrompt").value="请按同一个手指3次";
+								}else if(cmdErrorCode=="FPU0099000002"){
                                 	barEnrollProgress.style.width = (33 * 5) +'px'
                                     barEnrollProgress.innerHTML = '33%'
-                                }else if(this.responseText.indexOf("You need to press the 1 times fingerprint")>=0){
+               	    				document.getElementById("cmdPrompt").value="请再继续按同一个手指2次";
+                                }else if (cmdErrorCode=="FPU0199000002"){
+                                	barEnrollProgress.style.width = (33 * 5) +'px'
+                                    barEnrollProgress.innerHTML = '33%'
+               	    				document.getElementById("cmdPrompt").value="请再继续按同一个手指2次";
+                                }else if(cmdErrorCode=="FPU0099000001"){
                                 	barEnrollProgress.style.width = (33 * 5 *2) +'px'
                                     barEnrollProgress.innerHTML = '66%'
-                                }else if(this.responseText.indexOf("enroll succ")>=0){
-                                	barEnrollProgress.style.width = '500px'
-                                    barEnrollProgress.innerHTML = '100%'
-                        			clearInterval( cmdTimer );
-    								var xmlhttp2=null;
-    								xmlhttp2=new XMLHttpRequest();
-    					            xmlhttp2.onload = function(e) {};
-    					            xmlhttp2.ontimeout = function(e) {};
-    					            xmlhttp2.onerror = function(e) {};
-    					            //xmlhttp.upload.onprogress = function(e) {};
-    					            xmlhttp2.onreadystatechange = function(e) {
-    									if(this.status == 200||this.status == 304){
-    										document.getElementById("cmdResult").value=getMsgResult(this.responseText);
-    										cmdEnroll.disabled=false;
-    										cmdIdentify.disabled=false;
-    										cmdVerify.disabled=false;
-    										cmdTxtVerify.disabled=false;
-    										cmdCollection.disabled=false;
-   									}
-    								};
-    								xmlhttp2.onerror = function(e) { document.getElementById("cmdError").value=e; };
-    								xmlhttp2.open("POST",url,true);
-    					        	xmlhttp2.timeout = 50000;
-    					        	xmlhttp2.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-    								xmlhttp2.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwnerRegTempBase64\",\"msg\":\"\"}");
-                                }
+                   	    			document.getElementById("cmdPrompt").value="请再继续按同一个手指1次";
+                               }else if(cmdErrorCode=="FPU0199000001"){
+                                	barEnrollProgress.style.width = (33 * 5 *2) +'px'
+                                    barEnrollProgress.innerHTML = '66%'
+                   	    			document.getElementById("cmdPrompt").value="请再继续按同一个手指1次";
+                               }else{
+                 	    			document.getElementById("cmdPrompt").value="";
+                          			clearInterval( cmdTimer );
+									cmdEnroll.disabled=false;
+									cmdIdentify.disabled=false;
+									cmdVerify.disabled=false;
+									cmdTxtVerify.disabled=false;
+									cmdCollection.disabled=false;
+									cmdDel.disabled=false;
+                                	if(cmdErrorCode=="FPU0100000000" || cmdErrorCode=="FPU0100000004" || cmdErrorCode=="FPU0000000000" || cmdErrorCode=="FPU0000000004"){
+	                                	barEnrollProgress.style.width = '500px'
+    	                                barEnrollProgress.innerHTML = '100%'
+        	           	    			document.getElementById("cmdPrompt").value="";
+            	                		document.getElementById("cmdResult").value=getMsgResult(this.responseText);
+                                	}
+    	    					}
    	    					}
    	    				};
-   	    				httpGetCmdPrompt.onerror = function(e) { document.getElementById("cmdError").value=e; };
-   	    				httpGetCmdPrompt.open("POST",url,true);
-   	    	        	httpGetCmdPrompt.timeout = 50000;
-   	    	        	httpGetCmdPrompt.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-   	    				httpGetCmdPrompt.send("{\"appName\":\"\",\"beanName\":\"getCmdPrompt\",\"msg\":\"\"}");
+   	    				httpGetCurrentOwnerRegTempBase64.onerror = function(e) { document.getElementById("cmdError").value=e; };
+   	    				httpGetCurrentOwnerRegTempBase64.open("POST",url,true);
+   	    	        	httpGetCurrentOwnerRegTempBase64.timeout = 50000;
+   	    	        	httpGetCurrentOwnerRegTempBase64.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+   	    				httpGetCurrentOwnerRegTempBase64.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwnerRegTempBase64\",\"msg\":\"\"}");
                    	}
-               	}, 1000 );
+               	}, 100 );
            	}
            
 			cmdIdentify.onclick = function(){
@@ -325,6 +338,7 @@
 				cmdVerify.disabled=true;
 				cmdTxtVerify.disabled=true;
 				cmdCollection.disabled=true;
+				cmdDel.disabled=false;
 				document.getElementById("cmdPrompt").value="请按手指!";
 				document.getElementById("cmdResult").value="";
 				clearInterval( cmdTimer );
@@ -371,6 +385,7 @@
 										cmdVerify.disabled=false;
 										cmdTxtVerify.disabled=false;
 										cmdCollection.disabled=false;
+										cmdDel.disabled=false;
 									}
 								};
 								xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
@@ -414,6 +429,31 @@
 				xmlhttp.send(inParam);
 			}
 
+			cmdTxtVerify.onclick = function(){
+				document.getElementById("cmdPrompt").value="";
+				document.getElementById("cmdResult").value="";
+				clearInterval( cmdTimer );
+				var xmlhttp=null;
+				xmlhttp=new XMLHttpRequest();
+	            xmlhttp.onload = function(e) {};
+	            xmlhttp.ontimeout = function(e) {};
+	            xmlhttp.onerror = function(e) {};
+	            //xmlhttp.upload.onprogress = function(e) {};
+	            xmlhttp.onreadystatechange = function(e) {
+					if(this.status == 200||this.status == 304){
+						document.getElementById("cmdResult").value=getMsgResult(this.responseText);
+					}
+				};
+				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
+				xmlhttp.open("POST",url,true);
+	        	xmlhttp.timeout = 150000;
+	        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+	        	var inParam=
+	        		"{\"appName\":\"\",\"beanName\":\"cmdTxtVerify\",\"msg\":\""+document.getElementById("cmdInput").value+"\"}";
+	        	console.log(inParam);
+				xmlhttp.send(inParam);
+			}
+
 			cmdFreeSensor.onclick = function(){
 				cmdFreeSensor.disabled=true;
 				cmdEnroll.disabled=true;
@@ -421,6 +461,7 @@
 				cmdVerify.disabled=true;
 				cmdTxtVerify.disabled=true;
 				cmdCollection.disabled=true;
+				cmdDel.disabled=true;
 				
 				document.getElementById("cmdPrompt").value="";
 				document.getElementById("cmdResult").value="";
@@ -442,8 +483,80 @@
 	        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 				xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdFreeSensor\",\"msg\":\"\"}");
 			}
+			cmdDel.onclick = function(){
+				cmdEnroll.disabled=true;
+				cmdIdentify.disabled=true;
+				cmdVerify.disabled=true;
+				cmdTxtVerify.disabled=true;
+				cmdCollection.disabled=true;
+				cmdDel.disabled=true;
+				document.getElementById("cmdPrompt").value="请按手指!";
+				document.getElementById("cmdResult").value="";
+				clearInterval( cmdTimer );
+				var xmlhttp=null;
+				xmlhttp=new XMLHttpRequest();
+	            xmlhttp.onload = function(e) {};
+	            xmlhttp.ontimeout = function(e) {};
+	            xmlhttp.onerror = function(e) {};
+	            //xmlhttp.upload.onprogress = function(e) {};
+	            xmlhttp.onreadystatechange = function(e) {
+					if(this.status == 200||this.status == 304){
+					}
+				};
+				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
+				xmlhttp.open("POST",url,true);
+	        	xmlhttp.timeout = 50000;
+	        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+				xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdDel\",\"msg\":\""+document.getElementById("cmdInput").value+"\"}");
+
+   				cmdTimer = setInterval( function(){
+                    httpGetCmdPrompt=new XMLHttpRequest();
+    	            httpGetCmdPrompt.onload = function(e) {};
+    	            httpGetCmdPrompt.ontimeout = function(e) {};
+    	            httpGetCmdPrompt.onerror = function(e) {};
+    	            //httpGetCmdPrompt.upload.onprogress = function(e) {};
+    	            httpGetCmdPrompt.onreadystatechange = function(e) {
+    					if(this.status == 200||this.status == 304){
+    						document.getElementById("cmdPrompt").value=getMsgResult(this.responseText);
+							if(this.responseText.indexOf("Del suc")>=0  || this.responseText.indexOf("Identify fail")>=0 ){
+								clearInterval( cmdTimer );
+							}
+							if(this.responseText.indexOf("Del suc") >=0 ){
+								var xmlhttp=null;
+								xmlhttp=new XMLHttpRequest();
+					            xmlhttp.onload = function(e) {};
+					            xmlhttp.ontimeout = function(e) {};
+					            xmlhttp.onerror = function(e) {};
+					            //xmlhttp.upload.onprogress = function(e) {};
+					            xmlhttp.onreadystatechange = function(e) {
+									if(this.status == 200||this.status == 304){
+										document.getElementById("cmdResult").value=getMsgResult(this.responseText);
+										cmdEnroll.disabled=false;
+										cmdIdentify.disabled=false;
+										cmdVerify.disabled=false;
+										cmdTxtVerify.disabled=false;
+										cmdCollection.disabled=false;
+										cmdDel.disabled=false;
+									}
+								};
+								xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
+								xmlhttp.open("POST",url,true);
+					        	xmlhttp.timeout = 50000;
+					        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+								xmlhttp.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwner\",\"msg\":\"\"}");
+							}
+    					}
+    				};
+    				httpGetCmdPrompt.onerror = function(e) { document.getElementById("cmdError").value=e; };
+    				httpGetCmdPrompt.open("POST",url,true);
+    	        	httpGetCmdPrompt.timeout = 50000;
+    	        	httpGetCmdPrompt.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    				httpGetCmdPrompt.send("{\"appName\":\"\",\"beanName\":\"getCmdPrompt\",\"msg\":\"\"}");
+               	}, 1000 );
+			}
+
         }
- 		  </script>
+        </script>
 </head>
 <body>
     <input id="cmdEnroll" type="button" style="widh:8px;height:20px" value="指纹录入"/> 
@@ -452,6 +565,8 @@
     <input id="cmdTxtVerify" type="button" style="widh:8px;height:20px" value="文本查询"/>
     <input id="cmdCollection" type="button" style="widh:8px;height:20px" value="指纹采集"/>
     <input id="cmdFreeSensor" type="button" style="widh:8px;height:20px" value="关闭设备"/>
+    <input id="cmdDel" type="button" style="widh:8px;height:20px" value="指纹擦除"/> 
+
     
     <input id="cmdReturn" type="button" style="widh:8px;height:20px" value="返回"  onclick="javascript:history.back(-1);"/>
     <br/><br/>

@@ -11,3 +11,8 @@ bin
 /tisson-sfip-app-FingerprintSensorTool/target/test-classes
 /tisson-sfip-app-FingerprintSensorTool/target
 /tisson-sfip-app-FingerprintSensorTool/sfipLogsPath_IS_UNDEFINED
+/FingerprintRecognitionDemo/Test.exe
+/FingerprintRecognitionDemo/fpcore32.dll
+/FingerprintRecognitionDemo/fpengine.dll
+/FingerprintRecognitionDemo/fpengine.h
+/FingerprintRecognitionDemo/fpengine.lib

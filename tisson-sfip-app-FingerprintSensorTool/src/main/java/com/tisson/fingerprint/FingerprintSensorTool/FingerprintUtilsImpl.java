@@ -110,6 +110,10 @@ public class FingerprintUtilsImpl implements FingerprintUtilsInf{
 				response.setResult(FingerprintSensorHandle.getInstance().cmdVerify(msg.getMsg()));
 			}else if(msg.getBeanName().equalsIgnoreCase("cmdTxtVerify")){
 				response.setResult(FingerprintSensorHandle.getInstance().cmdTxtVerify(msg.getMsg()));
+			}else if(msg.getBeanName().equalsIgnoreCase("cmdDel")){
+				ret = FingerprintSensorHandle.getInstance().cmdDel(msg.getMsg());
+				response.setResponseCode(getResponseCode("01",ret));
+				response.setResult(FingerprintSensorHandle.getInstance().getManufacturer() +"," + FingerprintSensorHandle.getInstance().getFingerprintArryCount());
 			}else if(msg.getBeanName().equalsIgnoreCase("getCmdPrompt")){
 				response.setResponseCode("FPU00"+HelloWordResponse.KEY_STATUS_SUCCE+"000000");
 				response.setResult(FingerprintSensorHandle.getInstance().getCmdPrompt());
