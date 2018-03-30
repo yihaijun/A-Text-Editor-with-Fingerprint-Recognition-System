@@ -126,7 +126,7 @@
 			httpLoad.onerror = function(e) { document.getElementById("cmdError").value=e; };
 			httpLoad.open("POST",url,true);
 			//httpLoad.open("POST","http://172.16.28.126:29093/services/tisson/FingerprintUtilsInf/helloWord",true);
-        	httpLoad.timeout = 50000;
+        	httpLoad.timeout = 500000;
         	httpLoad.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 			httpLoad.send("{\"appName\":\"\",\"beanName\":\"load\",\"msg\":\"\"}");
 			
@@ -147,6 +147,7 @@
 				cmdDel.disabled=true;
 				document.getElementById("cmdPrompt").value="请你按同一个手指三次!";
 				document.getElementById("cmdResult").value="";
+				document.getElementById("cmdError").value="";
 				clearInterval( cmdTimer );
 				var xmlhttp=null;
 				xmlhttp=new XMLHttpRequest();
@@ -160,7 +161,7 @@
 				};
 				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
 				xmlhttp.open("POST",url,true);
-	        	xmlhttp.timeout = 50000;
+	        	xmlhttp.timeout = 500000;
 	        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 				xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdCollection\",\"msg\":\"\"}");
 
@@ -187,27 +188,27 @@
  								}else if(cmdErrorCode=="FPU0099000003"){
                                 	barEnrollProgress.style.width = '50px'
                                    	barEnrollProgress.innerHTML = '10%'
-             	    				document.getElementById("cmdPrompt").value="请按同一个手指3次";
+             	    				document.getElementById("cmdPrompt").value="请按同一个手指3次"+"("+getMsgResult(this.responseText)+")";
 								}else if(cmdErrorCode=="FPU0199000003"){
                                 	barEnrollProgress.style.width = '50px'
                                 	barEnrollProgress.innerHTML = '10%'
-           	    					document.getElementById("cmdPrompt").value="请按同一个手指3次";
+           	    					document.getElementById("cmdPrompt").value="请按同一个手指3次"+"("+getMsgResult(this.responseText)+")";
 								}else if(cmdErrorCode=="FPU0099000002"){
                                 	barEnrollProgress.style.width = (33 * 5) +'px'
                                     barEnrollProgress.innerHTML = '33%'
-               	    				document.getElementById("cmdPrompt").value="请再继续按同一个手指2次";
+               	    				document.getElementById("cmdPrompt").value="请再继续按同一个手指2次"+"("+getMsgResult(this.responseText)+")";
                                 }else if (cmdErrorCode=="FPU0199000002"){
                                 	barEnrollProgress.style.width = (33 * 5) +'px'
                                     barEnrollProgress.innerHTML = '33%'
-               	    				document.getElementById("cmdPrompt").value="请再继续按同一个手指2次";
+               	    				document.getElementById("cmdPrompt").value="请再继续按同一个手指2次"+"("+getMsgResult(this.responseText)+")";
                                 }else if(cmdErrorCode=="FPU0099000001"){
                                 	barEnrollProgress.style.width = (33 * 5 *2) +'px'
                                     barEnrollProgress.innerHTML = '66%'
-                   	    			document.getElementById("cmdPrompt").value="请再继续按同一个手指1次";
+                   	    			document.getElementById("cmdPrompt").value="请再继续按同一个手指1次"+"("+getMsgResult(this.responseText)+")";
                                }else if(cmdErrorCode=="FPU0199000001"){
                                 	barEnrollProgress.style.width = (33 * 5 *2) +'px'
                                     barEnrollProgress.innerHTML = '66%'
-                   	    			document.getElementById("cmdPrompt").value="请再继续按同一个手指1次";
+                   	    			document.getElementById("cmdPrompt").value="请再继续按同一个手指1次"+"("+getMsgResult(this.responseText)+")";
                                }else{
                   	    			document.getElementById("cmdPrompt").value="";
                           			clearInterval( cmdTimer );
@@ -228,7 +229,7 @@
    	    				};
    	    				httpGetCurrentOwnerRegTempBase64.onerror = function(e) { document.getElementById("cmdError").value=e; };
    	    				httpGetCurrentOwnerRegTempBase64.open("POST",url,true);
-   	    	        	httpGetCurrentOwnerRegTempBase64.timeout = 50000;
+   	    	        	httpGetCurrentOwnerRegTempBase64.timeout = 500000;
    	    	        	httpGetCurrentOwnerRegTempBase64.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
    	    				httpGetCurrentOwnerRegTempBase64.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwnerRegTempBase64\",\"msg\":\"\"}");
                 	}
@@ -244,6 +245,7 @@
 				cmdDel.disabled=true;
 				document.getElementById("cmdPrompt").value="请你按同一个手指三次!";
 				document.getElementById("cmdResult").value="";
+				document.getElementById("cmdError").value="";
 				clearInterval( cmdTimer );
 				var xmlhttp=null;
 				xmlhttp=new XMLHttpRequest();
@@ -257,7 +259,7 @@
 				};
 				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
 				xmlhttp.open("POST",url,true);
-	        	xmlhttp.timeout = 50000;
+	        	xmlhttp.timeout = 500000;
 	        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 				xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdEnroll\",\"msg\":\""+document.getElementById("cmdInput").value+"\"}");
 
@@ -284,27 +286,27 @@
  								}else if(cmdErrorCode=="FPU0099000003"){
                                 	barEnrollProgress.style.width = '50px'
                                    	barEnrollProgress.innerHTML = '10%'
-             	    				document.getElementById("cmdPrompt").value="请按同一个手指3次";
+             	    				document.getElementById("cmdPrompt").value="请按同一个手指3次"+"("+getMsgResult(this.responseText)+")";
 								}else if(cmdErrorCode=="FPU0199000003"){
                                 	barEnrollProgress.style.width = '50px'
                                 	barEnrollProgress.innerHTML = '10%'
-           	    					document.getElementById("cmdPrompt").value="请按同一个手指3次";
+           	    					document.getElementById("cmdPrompt").value="请按同一个手指3次"+"("+getMsgResult(this.responseText)+")";
 								}else if(cmdErrorCode=="FPU0099000002"){
                                 	barEnrollProgress.style.width = (33 * 5) +'px'
                                     barEnrollProgress.innerHTML = '33%'
-               	    				document.getElementById("cmdPrompt").value="请再继续按同一个手指2次";
+               	    				document.getElementById("cmdPrompt").value="请再继续按同一个手指2次"+"("+getMsgResult(this.responseText)+")";
                                 }else if (cmdErrorCode=="FPU0199000002"){
                                 	barEnrollProgress.style.width = (33 * 5) +'px'
                                     barEnrollProgress.innerHTML = '33%'
-               	    				document.getElementById("cmdPrompt").value="请再继续按同一个手指2次";
+               	    				document.getElementById("cmdPrompt").value="请再继续按同一个手指2次"+"("+getMsgResult(this.responseText)+")";
                                 }else if(cmdErrorCode=="FPU0099000001"){
                                 	barEnrollProgress.style.width = (33 * 5 *2) +'px'
                                     barEnrollProgress.innerHTML = '66%'
-                   	    			document.getElementById("cmdPrompt").value="请再继续按同一个手指1次";
+                   	    			document.getElementById("cmdPrompt").value="请再继续按同一个手指1次"+"("+getMsgResult(this.responseText)+")";
                                }else if(cmdErrorCode=="FPU0199000001"){
                                 	barEnrollProgress.style.width = (33 * 5 *2) +'px'
                                     barEnrollProgress.innerHTML = '66%'
-                   	    			document.getElementById("cmdPrompt").value="请再继续按同一个手指1次";
+                   	    			document.getElementById("cmdPrompt").value="请再继续按同一个手指1次"+"("+getMsgResult(this.responseText)+")";
                                }else{
                  	    			document.getElementById("cmdPrompt").value="";
                           			clearInterval( cmdTimer );
@@ -325,7 +327,7 @@
    	    				};
    	    				httpGetCurrentOwnerRegTempBase64.onerror = function(e) { document.getElementById("cmdError").value=e; };
    	    				httpGetCurrentOwnerRegTempBase64.open("POST",url,true);
-   	    	        	httpGetCurrentOwnerRegTempBase64.timeout = 50000;
+   	    	        	httpGetCurrentOwnerRegTempBase64.timeout = 500000;
    	    	        	httpGetCurrentOwnerRegTempBase64.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
    	    				httpGetCurrentOwnerRegTempBase64.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwnerRegTempBase64\",\"msg\":\"\"}");
                    	}
@@ -341,6 +343,7 @@
 				cmdDel.disabled=false;
 				document.getElementById("cmdPrompt").value="请按手指!";
 				document.getElementById("cmdResult").value="";
+				document.getElementById("cmdError").value="";
 				clearInterval( cmdTimer );
 				var xmlhttp=null;
 				xmlhttp=new XMLHttpRequest();
@@ -354,7 +357,7 @@
 				};
 				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
 				xmlhttp.open("POST",url,true);
-	        	xmlhttp.timeout = 50000;
+	        	xmlhttp.timeout = 500000;
 	        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 				xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdIdentify\",\"msg\":\"\"}");
 
@@ -368,9 +371,10 @@
     					if(this.status == 200||this.status == 304){
     						document.getElementById("cmdPrompt").value=getMsgResult(this.responseText);
 							if(this.responseText.indexOf("Identify suc")>=0  || this.responseText.indexOf("Identify fail")>=0 ){
-								clearInterval( cmdTimer );
+								//clearInterval( cmdTimer );
 							}
 							if(this.responseText.indexOf("Identify suc") >=0 ){
+								clearInterval( cmdTimer );
 								var xmlhttp=null;
 								xmlhttp=new XMLHttpRequest();
 					            xmlhttp.onload = function(e) {};
@@ -390,7 +394,7 @@
 								};
 								xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
 								xmlhttp.open("POST",url,true);
-					        	xmlhttp.timeout = 50000;
+					        	xmlhttp.timeout = 500000;
 					        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 								xmlhttp.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwner\",\"msg\":\"\"}");
 							}
@@ -398,7 +402,7 @@
     				};
     				httpGetCmdPrompt.onerror = function(e) { document.getElementById("cmdError").value=e; };
     				httpGetCmdPrompt.open("POST",url,true);
-    	        	httpGetCmdPrompt.timeout = 50000;
+    	        	httpGetCmdPrompt.timeout = 500000;
     	        	httpGetCmdPrompt.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     				httpGetCmdPrompt.send("{\"appName\":\"\",\"beanName\":\"getCmdPrompt\",\"msg\":\"\"}");
                	}, 1000 );
@@ -407,6 +411,7 @@
 			cmdVerify.onclick = function(){
 				document.getElementById("cmdPrompt").value="";
 				document.getElementById("cmdResult").value="";
+				document.getElementById("cmdError").value="";
 				clearInterval( cmdTimer );
 				var xmlhttp=null;
 				xmlhttp=new XMLHttpRequest();
@@ -421,7 +426,7 @@
 				};
 				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
 				xmlhttp.open("POST",url,true);
-	        	xmlhttp.timeout = 50000;
+	        	xmlhttp.timeout = 500000;
 	        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 	        	var inParam=
 	        		"{\"appName\":\"\",\"beanName\":\"cmdVerify\",\"msg\":\""+document.getElementById("cmdInput").value+"\"}";
@@ -432,6 +437,7 @@
 			cmdTxtVerify.onclick = function(){
 				document.getElementById("cmdPrompt").value="";
 				document.getElementById("cmdResult").value="";
+				document.getElementById("cmdError").value="";
 				clearInterval( cmdTimer );
 				var xmlhttp=null;
 				xmlhttp=new XMLHttpRequest();
@@ -446,7 +452,7 @@
 				};
 				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
 				xmlhttp.open("POST",url,true);
-	        	xmlhttp.timeout = 150000;
+	        	xmlhttp.timeout = 500000;
 	        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 	        	var inParam=
 	        		"{\"appName\":\"\",\"beanName\":\"cmdTxtVerify\",\"msg\":\""+document.getElementById("cmdInput").value+"\"}";
@@ -465,6 +471,7 @@
 				
 				document.getElementById("cmdPrompt").value="";
 				document.getElementById("cmdResult").value="";
+				document.getElementById("cmdError").value="";
 				clearInterval( cmdTimer );
 				var xmlhttp=null;
 				xmlhttp=new XMLHttpRequest();
@@ -479,7 +486,7 @@
 				};
 				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
 				xmlhttp.open("POST",url,true);
-	        	xmlhttp.timeout = 50000;
+	        	xmlhttp.timeout = 500000;
 	        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 				xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdFreeSensor\",\"msg\":\"\"}");
 			}
@@ -492,6 +499,7 @@
 				cmdDel.disabled=true;
 				document.getElementById("cmdPrompt").value="请按手指!";
 				document.getElementById("cmdResult").value="";
+				document.getElementById("cmdError").value="";
 				clearInterval( cmdTimer );
 				var xmlhttp=null;
 				xmlhttp=new XMLHttpRequest();
@@ -505,7 +513,7 @@
 				};
 				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
 				xmlhttp.open("POST",url,true);
-	        	xmlhttp.timeout = 50000;
+	        	xmlhttp.timeout = 500000;
 	        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 				xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdDel\",\"msg\":\""+document.getElementById("cmdInput").value+"\"}");
 
@@ -519,9 +527,10 @@
     					if(this.status == 200||this.status == 304){
     						document.getElementById("cmdPrompt").value=getMsgResult(this.responseText);
 							if(this.responseText.indexOf("Del suc")>=0  || this.responseText.indexOf("Identify fail")>=0 ){
-								clearInterval( cmdTimer );
+								//clearInterval( cmdTimer );
 							}
 							if(this.responseText.indexOf("Del suc") >=0 ){
+								clearInterval( cmdTimer );
 								var xmlhttp=null;
 								xmlhttp=new XMLHttpRequest();
 					            xmlhttp.onload = function(e) {};
@@ -541,7 +550,7 @@
 								};
 								xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
 								xmlhttp.open("POST",url,true);
-					        	xmlhttp.timeout = 50000;
+					        	xmlhttp.timeout = 500000;
 					        	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 								xmlhttp.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwner\",\"msg\":\"\"}");
 							}
@@ -549,7 +558,7 @@
     				};
     				httpGetCmdPrompt.onerror = function(e) { document.getElementById("cmdError").value=e; };
     				httpGetCmdPrompt.open("POST",url,true);
-    	        	httpGetCmdPrompt.timeout = 50000;
+    	        	httpGetCmdPrompt.timeout = 500000;
     	        	httpGetCmdPrompt.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     				httpGetCmdPrompt.send("{\"appName\":\"\",\"beanName\":\"getCmdPrompt\",\"msg\":\"\"}");
                	}, 1000 );

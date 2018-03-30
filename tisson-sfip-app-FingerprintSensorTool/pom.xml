@@ -227,6 +227,14 @@
 			<systemPath>${mylibsfippath}/../user/ZKFingerReader.jar</systemPath>
 		</dependency>
 		<dependency>
+			<groupId>com.sun.jna</groupId>
+			<artifactId>jna</artifactId>
+			<version>3.3.0</version>
+			<scope>system</scope>
+			<systemPath>${mylibsfippath}/../user/jna-3.3.0.jar</systemPath>
+		</dependency>
+		
+		<dependency>
 		    <groupId>org.jboss.resteasy</groupId>
 		    <artifactId>resteasy-jaxrs</artifactId>
 		    <version>3.0.7.Final</version>

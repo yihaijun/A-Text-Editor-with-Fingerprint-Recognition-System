@@ -81,7 +81,7 @@ public class FingerprintUtilsImpl implements FingerprintUtilsInf{
 				response.setResult(FingerprintSensorHandle.getInstance().getInstance().getCmdPrompt());
 			}else if(msg.getBeanName().equalsIgnoreCase("load")){
 				ret = FingerprintSensorHandle.getInstance().load();
-				response.setResult(FingerprintSensorHandle.getInstance().getManufacturer() +"," + FingerprintSensorHandle.getInstance().getFingerprintArryCount()+",SfipHome="+com.tisson.sfip.util.SystemUtils.getSfipHome());
+				response.setResult(FingerprintSensorHandle.getInstance().getManufacturer() +"," + FingerprintSensorHandle.getInstance().getFingerprintArryCount()+"/"+FingerprintSensorHandle.getInstance().getFingerprintDbArryCount()+"/"+FingerprintSensorHandle.getInstance().DBCount()+"/"+FingerprintSensorHandle.getInstance().getiFid()+",SfipHome="+com.tisson.sfip.util.SystemUtils.getSfipHome());
 			}else if(msg.getBeanName().equalsIgnoreCase("cmdFreeSensor")){
 				FingerprintSensorHandle.getInstance().FreeSensor();
 				response.setResult("SfipHome="+com.tisson.sfip.util.SystemUtils.getSfipHome());
@@ -101,7 +101,12 @@ public class FingerprintUtilsImpl implements FingerprintUtilsInf{
 				response.setResult(FingerprintSensorHandle.getInstance().getCurrentOwner());
 			}else if(msg.getBeanName().equalsIgnoreCase("getCurrentOwnerRegTempBase64")){
 				response.setResponseCode(getResponseCode("00",FingerprintSensorHandle.getInstance().getEnrollState()));
-				response.setResult(FingerprintSensorHandle.getInstance().getCurrentOwnerRegTempBase64());
+				String cmdErrorCode = getResponseCode("00",FingerprintSensorHandle.getInstance().getEnrollState());
+            	if(cmdErrorCode.equals("FPU0100000000") || cmdErrorCode.equals("FPU0100000004") || cmdErrorCode.equals("FPU0000000000") || cmdErrorCode.equals("FPU0000000004")){
+					response.setResult(FingerprintSensorHandle.getInstance().getCurrentOwnerRegTempBase64());
+            	}else{
+            		response.setResult(FingerprintSensorHandle.getInstance().getCmdPrompt());
+				}
 			}else if(msg.getBeanName().equalsIgnoreCase("cmdIdentify")){
 				ret = FingerprintSensorHandle.getInstance().cmdIdentify();
 				response.setResponseCode(getResponseCode("01",ret));
@@ -116,7 +121,7 @@ public class FingerprintUtilsImpl implements FingerprintUtilsInf{
 				response.setResult(FingerprintSensorHandle.getInstance().getManufacturer() +"," + FingerprintSensorHandle.getInstance().getFingerprintArryCount());
 			}else if(msg.getBeanName().equalsIgnoreCase("getCmdPrompt")){
 				response.setResponseCode("FPU00"+HelloWordResponse.KEY_STATUS_SUCCE+"000000");
-				response.setResult(FingerprintSensorHandle.getInstance().getCmdPrompt());
+				response.setResult(FingerprintSensorHandle.getInstance().getCmdPrompt() +"("+ FingerprintSensorHandle.getInstance().getFingerprintArryCount()+"/"+FingerprintSensorHandle.getInstance().getFingerprintDbArryCount()+"/"+FingerprintSensorHandle.getInstance().DBCount()+"/"+FingerprintSensorHandle.getInstance().getiFid()+")");
 			}else{
 				response.setResponseCode(getResponseCode("02",1));
 				response.setResult(FingerprintSensorHandle.getInstance().getCmdPrompt());

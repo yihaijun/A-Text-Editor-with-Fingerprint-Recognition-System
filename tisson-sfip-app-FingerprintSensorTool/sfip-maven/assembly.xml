@@ -49,6 +49,13 @@
 			</includes>
 			<outputDirectory>lib</outputDirectory>
 		</fileSet>
+		<fileSet>
+			<directory>${project.basedir}/sfiplib/user</directory>
+			<includes>
+				<include>jna-3.3.0.jar</include>
+			</includes>
+			<outputDirectory>lib</outputDirectory>
+		</fileSet>
 	</fileSets>
 	<dependencySets>
         <dependencySet>
