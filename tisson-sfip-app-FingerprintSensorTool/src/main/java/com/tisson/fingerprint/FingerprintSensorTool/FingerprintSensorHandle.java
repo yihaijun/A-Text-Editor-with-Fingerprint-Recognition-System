@@ -234,12 +234,21 @@ public class FingerprintSensorHandle {
 			lockEvent.setEvent();
 			return STATE_NO_DEVICE;
 		}
+		if(log.isInfoEnabled()){
+			log.info("deviceCount="+deviceCount);
+		}
 		if (0 == (mhDevice = FingerprintSensorEx.OpenDevice(0))) {
-			log.warn("[" + df.format(new Date()) + "] Open device fail, ret = "
+			
+			log.warn("[" + df.format(new Date()) + "] Open device fail, FingerprintSensorEx.OpenDevice(0) = "
 					+ ret + "!");
-			FreeSensor();
-			lockEvent.setEvent();
-			return STATE_NO_DEVICE;
+			mhDevice = FingerprintSensorEx.OpenDevice(1);
+			if(mhDevice==0){
+				log.warn("[" + df.format(new Date()) + "] Open device fail, FingerprintSensorEx.OpenDevice(1) = "
+						+ ret + "!");
+				FreeSensor();
+				lockEvent.setEvent();
+				return STATE_NO_DEVICE;
+			}
 		}
 		if(log.isInfoEnabled()){
 			log.info("mhDevice="+mhDevice);
@@ -486,7 +495,7 @@ public class FingerprintSensorHandle {
 	private boolean loadBase64Templat(String base64,int len,String path,int row,boolean printlog){
 		byte[] fpTemplate = new byte[len];
 		int ret = FingerprintSensorEx.Base64ToBlob(base64, fpTemplate, len);
-		if(ret != 0){
+		if(ret != len){
 			log.warn("loadBase64Templat("+base64+","+ len +","+path+","+ row+ ","+printlog+") return "+ret);
 		}
 
@@ -516,14 +525,12 @@ public class FingerprintSensorHandle {
 			fingerprintDbArry.add(iFid-1,vo);
 			iFid++;
 		} else {
-			if(ret != 0){
-				log.warn("loadBase64Templat("+base64+","+ len +","+path+","+ row+ ","+printlog+") return "+ret3);
-			}
+			log.warn("loadBase64Templat("+base64+","+ len +","+path+","+ row+ ","+printlog+") return "+ret3);
 			return false;
 		}
 		if (printlog) {
-			if(log.isInfoEnabled()){
-				log.info("[" + df.format(new Date()) + "] path=" + path
+			if(log.isDebugEnabled()){
+				log.debug("[" + df.format(new Date()) + "] path=" + path
 							+ "row="+row+",DBAdd="
 							+ ret3);
 			}
@@ -533,9 +540,11 @@ public class FingerprintSensorHandle {
 	
 
 	private boolean loadTestBase64(boolean printlog) {
-		File fileSet = new File("..\\external\\fingerprint\\collect-base64");
+		String rootPath="../external/fingerprint/collect-base64";
+		File fileSet = new File(rootPath);
 		File[] files = null;
 		if (!(fileSet.exists() && fileSet.isDirectory())) {
+			log.warn(rootPath +" not exists or is not Directory" );
 			return false;
 		}
 		files = fileSet.listFiles();
@@ -573,7 +582,7 @@ public class FingerprintSensorHandle {
 	}
 
 	private boolean loadTestBmp(boolean normal, boolean printlog) {
-		String parentPath = "..\\external\\fingerprint\\";
+		String parentPath = "../external/fingerprint/";
 		if (normal) {
 			parentPath = parentPath + "db";
 		} else {
@@ -608,11 +617,11 @@ public class FingerprintSensorHandle {
 					vo.setName(path);
 					vo.setData(fpTemplate);
 					vo.setFid(iFid);
-					String preKey="..\\external\\fingerprint\\db\\fingerprint-";
+					String preKey="../external/fingerprint/db/fingerprint-";
 					int preKeyIndex=path.indexOf(preKey);
 					int tailKeyIndex=0;
 					if(preKeyIndex<0){
-						preKey="..\\external\\fingerprint\\";
+						preKey="../external/fingerprint/";
 						preKeyIndex=path.indexOf(preKey);
 					}
 					vo.setOwner(path.substring(preKeyIndex+preKey.length())); 
@@ -740,7 +749,7 @@ public class FingerprintSensorHandle {
     	if(log.isDebugEnabled()){
     		log.debug("FingerprintSensorEx.DBIdentify:fid[0]="+fid[0]+",score[0]="+score[0]+",fid[1]="+fid[1]+",score[1]="+score[1]);
     	}
-        
+        int dbDelRet=0;
     	if(thPoolSize<=2){
 	        int pos=fid[0];
 			StringBuffer outBuf=new StringBuffer();
@@ -753,11 +762,14 @@ public class FingerprintSensorHandle {
 					record[count-1]=fid[0];
 				}
 				outBuf.append(fid[0] + "=" + score[0] + ";");
-				FingerprintSensorEx.DBDel(mhDB, fid[0]);
+				dbDelRet=FingerprintSensorEx.DBDel(mhDB, fid[0]);
 				
 				ret = FingerprintSensorEx.DBIdentify(mhDB,
 						template, fid, score);
 			}
+	    	if(log.isDebugEnabled()){
+	    		log.debug("FingerprintSensorEx.DBIdentify return "+ ret + ":count="+count+",dbDelRet="+dbDelRet+",fid[0]="+fid[0]+",score[0]="+score[0]+",fid[1]="+fid[1]+",score[1]="+score[1]);
+	    	}
 			long durationIn=System.currentTimeMillis()-beginTime;
 //			FingerprintSensorEx.DBAdd(mhDB, pos, fingerprintDbArry.get(pos-1).getData());
 			for(int i=0;i<record.length && i < count;i++ ){

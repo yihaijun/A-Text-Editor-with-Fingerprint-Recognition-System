@@ -35,30 +35,67 @@ public class FingerprintSensorTest {
 	 */
 	public static void main(String[] args) {
 		int ret = 0;
-		ret = fsTest.getDeviceCount();
-		System.out.println("[" + df.format(new Date())
-				+ "]  fsTest.getDeviceCount() return " + ret);
-		if (ret < 0) {
-			System.out.println("[" + df.format(new Date())
-					+ "]  fsTest.getDeviceCount() return " + ret);
-		}
-//		ret = fsTest.openDevice(0);
+		long h = 0;
+//		ret = fsTest.getDeviceCount();
 //		System.out.println("[" + df.format(new Date())
-//				+ "]  fsTest.openDevice(0) return " + ret);
-//		if (ret != FingerprintSensorErrorCode.ERROR_SUCCESS) {
-//			return;
+//				+ "]  fsTest.getDeviceCount() return " + ret);
+//		if (ret < 0) {
+//			System.out.println("[" + df.format(new Date())
+//					+ "]  fsTest.getDeviceCount() return " + ret);
 //		}
-//		getParameter(0, 10000000, 1);
-
-		byte[] fpTemplate2 = new byte[1024];
-		int cbTemplate = 0;
-		int[] FID = new int[10];
-		int[] score = new int[10];
-		long h = FingerprintSensorEx.OpenDevice(0);
-		int[] count=new int[10];
-		count[0]=0;
-//		ret = DBIdentify(h,  fpTemplate2, cbTemplate,FID,   score);
-//		ret = DBCount();
+////		ret = fsTest.openDevice(0);
+////		System.out.println("[" + df.format(new Date())
+////				+ "]  fsTest.openDevice(0) return " + ret);
+////		if (ret != FingerprintSensorErrorCode.ERROR_SUCCESS) {
+////			return;
+////		}
+////		getParameter(0, 10000000, 1);
+//
+//		byte[] fpTemplate2 = new byte[1024];
+//		int cbTemplate = 0;
+//		int[] FID = new int[10];
+//		int[] score = new int[10];
+//		long h = FingerprintSensorEx.OpenDevice(0);
+//		int[] count=new int[10];
+//		count[0]=0;
+////		ret = DBIdentify(h,  fpTemplate2, cbTemplate,FID,   score);
+////		ret = DBCount(h,count);
+////		ret = ZKFPService.INSTANCE.GetTemplateQuality(h);
+//		try {
+//			ret = ZKFPService.DBCount();
+//			System.out.println("ZKFPService.DBCount() return "+ret);
+//		} catch (Throwable e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		try {
+			ret = ZKFPService.GetDeviceCount();
+			h=ZKFPService.OpenDevice(0);
+			ret = ZKFPService.Initialize();
+			ret = ZKFPService.DBCount();
+			System.out.println("ZKFPService.DBCount() return "+ret);
+			byte []temp=new byte[2048];
+//			ret = ZKFPService.GetTemplateQuality(h,temp);
+			ret = ZKFPService.Terminate();
+		} catch (Throwable e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			try{
+				ret = ZKFPService.GetTemplateQuality();
+			} catch (Throwable e2) {
+				e2.printStackTrace();
+			}
+		}
+		ret = ZKFPService.GetDeviceCount();
+		System.out.println("ZKFPService.DBCount() return "+ret);
+		try {
+			ret = com.tisson.fingerprint.test.ZKFPServiceInf.INSTANCE.Initialize();
+//			ret = ZKFPService.INSTANCE.DBCount(h, count);
+			System.out.println("ZKFPService.INSTANCE..DBCount() return "+ret);
+		} catch (Throwable e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		long beginTime = System.currentTimeMillis();
 		bmpToKey();
@@ -443,23 +480,15 @@ public class FingerprintSensorTest {
 		return true;
 	}
 
-	public interface MyZKFPService extends Library {
-		MyZKFPService INSTANCE = (MyZKFPService)Native.loadLibrary(("libzkfp.dll"),	MyZKFPService.class);
-
-	    int DBIdentify(long hDBCache,  byte[] fpTemplate, int cbTemplate,int[] FID,  int[] score);
-	    int GetDBCacheCount(long hDBCache, int[] fpCount);	//same as ZKFPM_GetDBCacheCount, for new version
-//	    int DBCount(long hDBCache, int[] fpCount);	//same as ZKFPM_GetDBCacheCount, for new version
-	    int DBCount();
-
-	}
 
 	public static int  DBIdentify(long hDBCache,  byte[] fpTemplate, int cbTemplate,int[] FID,  int[] score){
-		int ret=MyZKFPService.INSTANCE.DBIdentify(hDBCache,fpTemplate,cbTemplate,FID,score);
+		int ret=com.tisson.fingerprint.test.ZKFPServiceInf.INSTANCE.DBIdentify(hDBCache,fpTemplate,cbTemplate,FID,score);
 		return ret;
 	}
 	
-	public static int DBCount(){
-		int ret=MyZKFPService.INSTANCE.DBCount();
+	public static int DBCount(long hDBCache,int[] fpCount){
+//		int ret=ZKFPService.INSTANCE.DBCount(hDBCache,fpCount);
+		int ret=com.tisson.fingerprint.test.ZKFPServiceInf.INSTANCE.DBCount();
 		return ret;
 	}
 }

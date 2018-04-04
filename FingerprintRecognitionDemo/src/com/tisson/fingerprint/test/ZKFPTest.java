@@ -15,7 +15,6 @@ import java.util.Date;
 import com.zkteco.biometric.FingerprintSensor;
 import com.zkteco.biometric.FingerprintSensorErrorCode;
 import com.zkteco.biometric.FingerprintSensorEx;
-import com.zkteco.biometric.ZKFPService;
 
 /**
  * @author yihaijun

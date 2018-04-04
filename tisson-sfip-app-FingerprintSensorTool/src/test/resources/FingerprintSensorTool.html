@@ -16,8 +16,15 @@
         }
     </style>
     <script>
-        var url="http://127.0.0.1:29093/services/tisson/FingerprintUtils/call";
-	    function myStrEqual(src1,src2){
+      url="http://127.0.0.1:29093/services/tisson/FingerprintUtils/call";
+      function GetQueryString(name)
+        {
+             var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+             var r = window.location.search.substr(1).match(reg);
+             if(r!=null)return  unescape(r[2]); return null;
+        }
+        
+        function myStrEqual(src1,src2){
 	    	if(src1.indexOf(src2) >= 0){
 	    		return true;
 	    	}else{
@@ -72,6 +79,7 @@
             	getCmdPromptTimer = null,
             	httpLoad = null,httpGetCmdPrompt=null,
             	sfipHome="",cmdErrorCode="",
+            	serverUrl="127.0.0.1:29093",
                 searchStr = location.search,searchStr,searchs,address;  
             
                 
@@ -81,7 +89,12 @@
             	if(searchs[0].indexOf("=")>0){ 
             		address = searchs[0].split("=");
             		document.getElementById("cmdInput").value=address[1];
+            	}
+            	serverUrl=GetQueryString("server");
+            	if(serverUrl==""){
+            		serverUrl="127.0.0.1:29093";
             	}    
+                url="http://"+serverUrl+"/services/tisson/FingerprintUtils/call";
             }
 
             getCmdPromptTimer = setInterval( function(){

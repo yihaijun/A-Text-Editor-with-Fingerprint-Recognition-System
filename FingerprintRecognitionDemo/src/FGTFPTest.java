@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.tisson.fingerprint.test;
+
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,8 +16,6 @@ import java.util.Date;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;
-import com.sun.xml.internal.messaging.saaj.util.Base64;
-import com.tisson.fingerprint.test.FGTFPDemo.fpLibrary;
 
 /**
  * @author yihaijun
@@ -57,72 +55,6 @@ public class FGTFPTest {
 
 	}
 	
-	public static int  MatchTemplateOne(byte[] pSrcData,byte[] pDstData,int nDstSize){
-		int ret=fpLibrary.INSTANCE.MatchTemplateOne(pSrcData,pDstData,nDstSize);
-		return ret;
-	}
-
-	public static int CreateTemplate(byte[] pFingerData,byte[] pTemplate){
-		int ret=fpLibrary.INSTANCE.CreateTemplate(pFingerData,pTemplate);
-		return ret;
-	}
-	public static void CharByteToStr(byte[] buf,int size,char[] str){
-		fpLibrary.INSTANCE.CharByteToStr(buf,size,str);
-	}
-	public static void CharByteToUStr(byte[] buf,int size,char[] str){
-		fpLibrary.INSTANCE.CharByteToUStr(buf,size,str);
-	}
-	public static int MatchTemplateEx(char[] pSrcData,char[] pDstData){
-		int ret=fpLibrary.INSTANCE.MatchTemplateEx(pSrcData,pDstData);
-		return ret;
-	}
-	public static int UMatchTemplateEx(char[] puSrcData,char[] puDstData){
-		int ret=fpLibrary.INSTANCE.UMatchTemplateEx(puSrcData,puDstData);
-		return ret;
-	}
-
-
-	 /** 
-     * NIO way 
-     *  
-     * @param filename 
-     * @return 
-     * @throws IOException 
-     */  
-    public static byte[] toByteArray2(String filename) throws IOException {  
-  
-        File f = new File(filename);  
-        if (!f.exists()) {  
-            throw new FileNotFoundException(filename);  
-        }  
-  
-        FileChannel channel = null;  
-        FileInputStream fs = null;  
-        try {  
-            fs = new FileInputStream(f);  
-            channel = fs.getChannel();  
-            ByteBuffer byteBuffer = ByteBuffer.allocate((int) channel.size());  
-            while ((channel.read(byteBuffer)) > 0) {  
-                // do nothing  
-                // System.out.println("reading");  
-            }  
-            return byteBuffer.array();  
-        } catch (IOException e) {  
-            e.printStackTrace();  
-            throw e;  
-        } finally {  
-            try {  
-                channel.close();  
-            } catch (IOException e) {  
-                e.printStackTrace();  
-            }  
-            try {  
-                fs.close();  
-            } catch (IOException e) {  
-                e.printStackTrace();  
-            }  
-        }  
-    }  
 	 /**
      * 以字符为单位读取文件，常用于读文本，数字等类型的文件
      */
@@ -176,34 +108,6 @@ public class FGTFPTest {
 
     public static void main(String[] args) {
 		int ret = 0;
-//		byte[] imageByteData = null;
-//		byte[] pFingerData = new  byte[2048];
-//		try {
-//			imageByteData = BmpTransformation.loadAnyImage("D:\\test\\fgt\\1.bmp").data;
-//		} catch (Throwable t) {
-//			t.printStackTrace();
-//		}
-//		try {
-////	   		int r=fpLibrary.INSTANCE.OpenDevice(0,0,0);
-////    		if(r==1){
-////    			if(fpLibrary.INSTANCE.LinkDevice()==1){
-////    				System.out.println("Device Ready!");
-////    			}else{
-////    				System.out.println("Link Device Fail");
-////    			}
-////    		}else{
-////    			System.out.println("Open Device Fail");
-////    		}			
-////			System.out.println("FGTFPTest.CreateTemplate begin...imageByteData.length="+imageByteData.length+",256*288="+256*288);
-////    		ret = FGTFPTest.CreateTemplate(pFingerData, imageByteData);
-////			System.out.println("FGTFPTest.CreateTemplate retrun.");
-////			ret = fpLibrary.INSTANCE.MatchTemplate(pFingerData,pFingerData);
-////			System.out.println("MatchTemplate retrun "+ret);
-//		} catch (Throwable e) {
-//			e.printStackTrace();
-//		}
-//		System.out.println("FGTFPTest.CreateTemplate return "+ ret);
-		
 		String base64_b1 = readFileByChars("D:\\test\\fgt\\1.txt");
 		String base64_b2 = readFileByChars("D:\\test\\fgt\\2.txt");
 		String base64_1 = readFileByChars("D:\\test\\fgt\\testiso-11.txt");
@@ -215,16 +119,16 @@ public class FGTFPTest {
 		for(int i=0;i<3;i++){
 			buf.delete(0, buf.length());
 			buf.append("[" + df.format(new Date())+"] UMatchTemplateEx:");
-			ret = FGTFPTest.UMatchTemplateEx(base64_b1.toCharArray(),base64_b1.toCharArray());		
+			ret = fpLibrary.INSTANCE.UMatchTemplateEx(base64_b1.toCharArray(),base64_b1.toCharArray());		
 			buf.append("b1:b1="+ ret+";");
-			ret = FGTFPTest.UMatchTemplateEx(base64_b1.toCharArray(),base64_b2.toCharArray());		
+			ret = fpLibrary.INSTANCE.UMatchTemplateEx(base64_b1.toCharArray(),base64_b2.toCharArray());		
 			buf.append("b1:b2="+ ret+";");
 
-			ret = FGTFPTest.UMatchTemplateEx(base64_1.toCharArray(),base64_1.toCharArray());		
+			ret = fpLibrary.INSTANCE.UMatchTemplateEx(base64_1.toCharArray(),base64_1.toCharArray());		
 			buf.append("1:1="+ ret+";");
-			ret = FGTFPTest.UMatchTemplateEx(base64_1.toCharArray(),base64_2.toCharArray());		
+			ret = fpLibrary.INSTANCE.UMatchTemplateEx(base64_1.toCharArray(),base64_2.toCharArray());		
 			buf.append("1:2="+ ret+";");
-			ret = FGTFPTest.UMatchTemplateEx(base64_1.toCharArray(),base64_3.toCharArray());		
+			ret = fpLibrary.INSTANCE.UMatchTemplateEx(base64_1.toCharArray(),base64_3.toCharArray());		
 			buf.append("1:3="+ ret+";");
 			buf.append(" [" + df.format(new Date())+"]");
 			System.out.println(buf.toString());

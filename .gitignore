@@ -16,3 +16,7 @@ bin
 /FingerprintRecognitionDemo/fpengine.dll
 /FingerprintRecognitionDemo/fpengine.h
 /FingerprintRecognitionDemo/fpengine.lib
+/FingerprintRecognitionDemo/libcorrect.dll
+/FingerprintRecognitionDemo/libsilkid.dll
+/FingerprintRecognitionDemo/libusb0.dll
+/FingerprintRecognitionDemo/src/fpengine.dll

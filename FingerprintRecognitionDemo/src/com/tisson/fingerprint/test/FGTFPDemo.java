@@ -21,6 +21,7 @@ public class FGTFPDemo  extends Frame implements ActionListener{
     static Button btn3=new Button("Printer Test");
     static Button btn4=new Button("Enroll Template");
     static Button btn5=new Button("Identify Template");
+    static Button btn6=new Button("Printer Bmp");
     static Label lab1=new Label("");
     static Panel panel1=new Panel();
     
@@ -40,6 +41,7 @@ public class FGTFPDemo  extends Frame implements ActionListener{
     	btn3.setSize(160,30);    	btn3.setLocation(20,120);    	jc.add(btn3);
     	btn4.setSize(160,30);    	btn4.setLocation(20,160);    	jc.add(btn4);
     	btn5.setSize(160,30);    	btn5.setLocation(20,200);    	jc.add(btn5);
+    	btn6.setSize(160,30);    	btn6.setLocation(20,240);    	jc.add(btn6);
     	
     	lab1.setSize(200,20);
     	lab1.setLocation(20,240);
@@ -54,6 +56,7 @@ public class FGTFPDemo  extends Frame implements ActionListener{
     	btn3.addActionListener(jc);
     	btn4.addActionListener(jc);
     	btn5.addActionListener(jc);
+    	btn6.addActionListener(jc);
     	
     	jc.setTitle("Java Fingerprint SDK Demo");
     	jc.setSize(400,600);
@@ -93,6 +96,11 @@ public class FGTFPDemo  extends Frame implements ActionListener{
     		fpLibrary.INSTANCE.EnrolFpChar();
     	}else if(obj.equals(btn5)){
     		fpLibrary.INSTANCE.GenFpChar();
+    	}else if(obj.equals(btn6)){
+    		MyMemoryImageSource myMIS = BmpTransformation.loadAnyImage("d:\\test\\fgt\\1.bmp");
+    		Image img = createImage(myMIS);
+        	Graphics g=panel1.getGraphics();
+        	g.drawImage(img, 20, 260,myMIS.w, myMIS.h, panel1);
     	}
     }
 	
@@ -189,5 +197,6 @@ public class FGTFPDemo  extends Frame implements ActionListener{
 		int MatchTemplateOne(byte[] pSrcData,byte[] pDstData,int nDstSize);
 		int MatchTemplate(byte[] pSrcData,byte[] pDstData);
 	}
+
 
 }
