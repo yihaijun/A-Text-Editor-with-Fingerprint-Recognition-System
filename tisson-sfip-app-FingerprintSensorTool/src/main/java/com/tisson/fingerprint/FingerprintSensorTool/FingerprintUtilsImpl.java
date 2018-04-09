@@ -80,7 +80,11 @@ public class FingerprintUtilsImpl implements FingerprintUtilsInf{
 				//调用其它辅助应用的bean,以后增加加,现暂时直接返回当前操作状态
 				response.setResult(FingerprintSensorHandle.getInstance().getInstance().getCmdPrompt());
 			}else if(msg.getBeanName().equalsIgnoreCase("load")){
-				ret = FingerprintSensorHandle.getInstance().load();
+				boolean needDevice = true;
+				if(msg.getMsg() !=null && msg.getMsg().equalsIgnoreCase("false")){
+					needDevice = false;
+				}
+				ret = FingerprintSensorHandle.getInstance().load(needDevice);
 				response.setResult(FingerprintSensorHandle.getInstance().getManufacturer() +"," + FingerprintSensorHandle.getInstance().getFingerprintArryCount()+"/"+FingerprintSensorHandle.getInstance().getFingerprintDbArryCount()+"/"+FingerprintSensorHandle.getInstance().DBCount()+"/"+FingerprintSensorHandle.getInstance().getiFid()+",SfipHome="+com.tisson.sfip.util.SystemUtils.getSfipHome());
 			}else if(msg.getBeanName().equalsIgnoreCase("cmdFreeSensor")){
 				FingerprintSensorHandle.getInstance().FreeSensor();
@@ -152,7 +156,7 @@ public class FingerprintUtilsImpl implements FingerprintUtilsInf{
 	}
 
 	public void init(){
-		FingerprintSensorHandle.getInstance().load();
+		FingerprintSensorHandle.getInstance().load(true);
 	}
 	
 	public void onExit() {

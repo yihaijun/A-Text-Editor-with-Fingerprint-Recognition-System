@@ -3,6 +3,8 @@
  */
 package com.tisson.fingerprint.FingerprintSensorTool;
 
+import com.machinezoo.sourceafis.FingerprintTemplate;
+
 /**
  * @author yihaijun
  *
@@ -11,6 +13,10 @@ public class FingerprintVo {
 	private byte[] data;
 	private String name;
 	private String owner;
+
+	private String imagePath;
+	private FingerprintTemplate template;
+	private String jsonTemplate;
 	
 	private int fid=-1;
 	
@@ -62,4 +68,40 @@ public class FingerprintVo {
 	public void setOwner(String owner) {
 		this.owner = owner;
 	}
+	/**
+	 * @return the template
+	 */
+	public FingerprintTemplate getTemplate() {
+		return template;
+	}
+	/**
+	 * @param template the template to set
+	 */
+	public void setTemplate(FingerprintTemplate template) {
+		this.template = template;
+	}
+	/**
+	 * @return the jsonTemplate
+	 */
+	public String getJsonTemplate() {
+		return jsonTemplate;
+	}
+	/**
+	 * @param jsonTemplate the jsonTemplate to set
+	 */
+	public void setJsonTemplate(String jsonTemplate) {
+		this.jsonTemplate = jsonTemplate;
+	}
+	/**
+	 * @return the imagePath
+	 */
+	public String getImagePath() {
+		return imagePath;
+	}
+	/**
+	 * @param imagePath the imagePath to set
+	 */
+	public void setImagePath(String imagePath) {
+		this.imagePath = imagePath;
+	}	
 }
