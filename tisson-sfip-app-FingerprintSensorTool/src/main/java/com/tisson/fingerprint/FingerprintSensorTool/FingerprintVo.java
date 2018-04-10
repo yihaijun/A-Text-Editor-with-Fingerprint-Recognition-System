@@ -4,58 +4,45 @@
 package com.tisson.fingerprint.FingerprintSensorTool;
 
 import com.machinezoo.sourceafis.FingerprintTemplate;
+import com.tisson.sfip.module.util.SystemUtil;
 
 /**
  * @author yihaijun
  *
  */
 public class FingerprintVo {
-	private byte[] data;
-	private String name;
+	private int type=FingerprintTypeEnum.ZKLIB.getCode();
+	
 	private String owner;
 
 	private String imagePath;
-	private FingerprintTemplate template;
-	private String jsonTemplate;
+
+	private byte[] fpTemplateByteArry;
+
+	private FingerprintTemplate fpTemplate;
+	private String fpTemplateJsonStr;
+
+	private String collector=SystemUtil.getLocalHostAddress();
 	
-	private int fid=-1;
+//	private FingerprintVo(){
+//		
+//	}
 	
 	/**
-	 * @return the data
+	 * @return the fpTemplateByteArry
 	 */
-	public byte[] getData() {
-		return data;
+	public byte[] getFpTemplateByteArry() {
+		return fpTemplateByteArry;
 	}
 	/**
-	 * @param data the data to set
+	 * @param fpTemplateByteArry the fpTemplateByteArry to set
 	 */
-	public void setData(byte[] data) {
-		this.data = data;
+	public void setFpTemplateByteArry(byte[] fpTemplateByteArry) {
+		this.fpTemplateByteArry = fpTemplateByteArry;
 	}
 	/**
 	 * @return the name
 	 */
-	public String getName() {
-		return name;
-	}
-	/**
-	 * @param name the name to set
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
-	/**
-	 * @return the fid
-	 */
-	public int getFid() {
-		return fid;
-	}
-	/**
-	 * @param fid the fid to set
-	 */
-	public void setFid(int fid) {
-		this.fid = fid;
-	}
 	/**
 	 * @return the owner
 	 */
@@ -69,28 +56,28 @@ public class FingerprintVo {
 		this.owner = owner;
 	}
 	/**
-	 * @return the template
+	 * @return the fpTemplate
 	 */
-	public FingerprintTemplate getTemplate() {
-		return template;
+	public FingerprintTemplate getFpTemplate() {
+		return fpTemplate;
 	}
 	/**
-	 * @param template the template to set
+	 * @param fpTemplate the fpTemplate to set
 	 */
-	public void setTemplate(FingerprintTemplate template) {
-		this.template = template;
+	public void setFpTemplate(FingerprintTemplate fpTemplate) {
+		this.fpTemplate = fpTemplate;
 	}
 	/**
-	 * @return the jsonTemplate
+	 * @return the fpTemplateJsonStr
 	 */
-	public String getJsonTemplate() {
-		return jsonTemplate;
+	public String getFpTemplateJsonStr() {
+		return fpTemplateJsonStr;
 	}
 	/**
-	 * @param jsonTemplate the jsonTemplate to set
+	 * @param fpTemplateJsonStr the fpTemplateJsonStr to set
 	 */
-	public void setJsonTemplate(String jsonTemplate) {
-		this.jsonTemplate = jsonTemplate;
+	public void setFpTemplateJsonStr(String fpTemplateJsonStr) {
+		this.fpTemplateJsonStr = fpTemplateJsonStr;
 	}
 	/**
 	 * @return the imagePath
@@ -104,4 +91,49 @@ public class FingerprintVo {
 	public void setImagePath(String imagePath) {
 		this.imagePath = imagePath;
 	}	
+
+	/**
+	 * @return the type
+	 */
+	public int getType() {
+		return type;
+	}
+	
+	/**
+	 * @param type the type to set
+	 */
+	public void setType(int type) {
+		this.type = type;
+	}
+	/**
+	 * @return the collector
+	 */
+	public String getCollector() {
+		return collector;
+	}
+	public static String getLabelReference(int ret,int j){
+		String labelReference = "100_00000";
+		if(ret<10){
+			labelReference="00"+ret;
+		}else if(ret<100){
+			labelReference="0"+ret;
+		}else{
+			labelReference=""+ret;
+		}
+		labelReference=labelReference+"_";
+		if(j<10){
+			labelReference=labelReference+"00000"+j;
+		}else if(j<100){
+			labelReference=labelReference+"0000"+j;
+		}else if(j<1000){
+			labelReference=labelReference+"000"+j;
+		}else if(j<10000){
+			labelReference=labelReference+"00"+j;
+		}else if(j<100000){
+			labelReference=labelReference+"0"+j;
+		}else{
+			labelReference=labelReference+""+j;
+		}
+		return labelReference;
+	}
 }

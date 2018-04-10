@@ -26,6 +26,11 @@ import com.zkteco.biometric.FingerprintSensorEx;
 public class MySourceAFIS {
 	private final static String fileSeparator = System.getProperty("file.separator");
 
+	public static double match(FingerprintTemplate probe, FingerprintTemplate candidate) {
+		double score = new FingerprintMatcher().index(probe).match(candidate);
+		return score;
+	}
+
 	public static double match(byte[] probeImage, byte[] candidateImage) {
 		FingerprintTemplate probe = new FingerprintTemplate().dpi(500).create(
 				probeImage);
@@ -33,10 +38,35 @@ public class MySourceAFIS {
 		FingerprintTemplate candidate = new FingerprintTemplate().dpi(500)
 				.create(candidateImage);
 
-		double score = new FingerprintMatcher().index(probe).match(candidate);
-		return score;
+		return match(probe,candidate);
 	}
 
+
+
+	public static Hashtable<String, FingerprintVo> find(FingerprintTemplate probe,
+			java.util.ArrayList<FingerprintVo> candidates, double threshold,int beginPos,int endPos) {
+		Hashtable<String, FingerprintVo> result = new Hashtable<String, FingerprintVo>();
+		if(probe==null){
+			return result;
+		}
+		FingerprintMatcher matcher = new FingerprintMatcher().index(probe);
+		for (int index = beginPos;index<=endPos;) {
+			if(candidates==null || index>=candidates.size()|| index<=0){
+				break;
+			}
+			FingerprintVo candidate=candidates.get(index-1);
+			index++;
+			if(candidate==null || candidate.getFpTemplate()==null){
+				continue;
+			}
+			double score = matcher.match(candidate.getFpTemplate());
+			if (score > threshold) {
+				result.put(FingerprintVo.getLabelReference(Double.valueOf(score).intValue(),index-1), candidate);
+			}
+		}
+		return result;
+	}
+	
 	public static Hashtable<String, FingerprintVo> find(FingerprintTemplate probe,
 			Iterable<FingerprintVo> candidates, double threshold) {
 		Hashtable<String, FingerprintVo> result = new Hashtable<String, FingerprintVo>();
@@ -47,43 +77,17 @@ public class MySourceAFIS {
 		int index = 0;
 		for (FingerprintVo candidate : candidates) {
 			index++;
-			if(candidate.getTemplate()==null){
+			if(candidate.getFpTemplate()==null){
 				continue;
 			}
-			double score = matcher.match(candidate.getTemplate());
+			double score = matcher.match(candidate.getFpTemplate());
 			if (score > threshold) {
-				result.put(getLabelReference(Double.valueOf(score).intValue(),index), candidate);
+				result.put(FingerprintVo.getLabelReference(Double.valueOf(score).intValue(),index), candidate);
 			}
 		}
 		return result;
 	}
 	
-	private static String getLabelReference(int ret,int j){
-		String labelReference = "100_00000";
-		if(ret<10){
-			labelReference="00"+ret;
-		}else if(ret<100){
-			labelReference="0"+ret;
-		}else{
-			labelReference=""+ret;
-		}
-		labelReference=labelReference+"_";
-		if(j<10){
-			labelReference=labelReference+"00000"+j;
-		}else if(j<100){
-			labelReference=labelReference+"0000"+j;
-		}else if(j<1000){
-			labelReference=labelReference+"000"+j;
-		}else if(j<10000){
-			labelReference=labelReference+"00"+j;
-		}else if(j<100000){
-			labelReference=labelReference+"0"+j;
-		}else{
-			labelReference=labelReference+""+j;
-		}
-		return labelReference;
-	}
-
 	public static int load(FingerprintVo vo) {
 		// Caching fingerprint templates
 		if(vo== null || vo.getImagePath()==null || vo.getImagePath().trim().equals("")){
@@ -133,15 +137,16 @@ public class MySourceAFIS {
 
 	public static int load(FingerprintVo vo,String jsonTemplate) {
 		// Caching fingerprint templates
-		if(vo== null || vo.getImagePath()==null || vo.getImagePath().trim().equals("") || jsonTemplate == null|| jsonTemplate.trim().equals("")){
+		if(vo== null || jsonTemplate == null|| jsonTemplate.trim().equals("")){
 			return -1;
 		}
-		byte[] image = null;
 		try {
-
-			vo.setJsonTemplate(jsonTemplate);
-			vo.setTemplate(new FingerprintTemplate().deserialize(vo
-					.getJsonTemplate()));
+			vo.setFpTemplateJsonStr(jsonTemplate);
+			vo.setFpTemplate(new FingerprintTemplate().deserialize(vo
+					.getFpTemplateJsonStr()));
+			
+			vo.setType(FingerprintTypeEnum.SourceAFIS.getCode());
+			
 		} catch (Throwable t) {
 			log.warn("load("+ vo.getImagePath()+") Throwable",t);
 			return -3;
