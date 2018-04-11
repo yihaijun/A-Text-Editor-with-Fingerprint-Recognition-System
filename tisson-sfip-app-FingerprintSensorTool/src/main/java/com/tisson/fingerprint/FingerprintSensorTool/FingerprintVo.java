@@ -20,13 +20,8 @@ public class FingerprintVo {
 	private byte[] fpTemplateByteArry;
 
 	private FingerprintTemplate fpTemplate;
-	private String fpTemplateJsonStr;
 
 	private String collector=SystemUtil.getLocalHostAddress();
-	
-//	private FingerprintVo(){
-//		
-//	}
 	
 	/**
 	 * @return the fpTemplateByteArry
@@ -67,18 +62,7 @@ public class FingerprintVo {
 	public void setFpTemplate(FingerprintTemplate fpTemplate) {
 		this.fpTemplate = fpTemplate;
 	}
-	/**
-	 * @return the fpTemplateJsonStr
-	 */
-	public String getFpTemplateJsonStr() {
-		return fpTemplateJsonStr;
-	}
-	/**
-	 * @param fpTemplateJsonStr the fpTemplateJsonStr to set
-	 */
-	public void setFpTemplateJsonStr(String fpTemplateJsonStr) {
-		this.fpTemplateJsonStr = fpTemplateJsonStr;
-	}
+
 	/**
 	 * @return the imagePath
 	 */

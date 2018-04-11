@@ -16,7 +16,7 @@ public enum FingerprintTypeEnum {
     /**
      * 提现
      */
-    SourceAFIS(2, "SourceAFIS");
+    TissonAFIS(2, "TissonAFIS");
     
     @Getter
     private  int code;

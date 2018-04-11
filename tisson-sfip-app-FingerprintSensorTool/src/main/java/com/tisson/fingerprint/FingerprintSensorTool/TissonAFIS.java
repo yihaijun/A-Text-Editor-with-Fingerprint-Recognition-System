@@ -8,23 +8,21 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Hashtable;
 
 import lombok.extern.slf4j.Slf4j;
 
 import com.machinezoo.sourceafis.FingerprintMatcher;
 import com.machinezoo.sourceafis.FingerprintTemplate;
-import com.zkteco.biometric.FingerprintSensorEx;
 
 /**
  * @author yihaijun
  * 
  */
 @Slf4j
-public class MySourceAFIS {
+public class TissonAFIS {
 	private final static String fileSeparator = System.getProperty("file.separator");
+	private static String lastErrrorDescribe; 
 
 	public static double match(FingerprintTemplate probe, FingerprintTemplate candidate) {
 		double score = new FingerprintMatcher().index(probe).match(candidate);
@@ -51,7 +49,12 @@ public class MySourceAFIS {
 		}
 		FingerprintMatcher matcher = new FingerprintMatcher().index(probe);
 		for (int index = beginPos;index<=endPos;) {
-			if(candidates==null || index>=candidates.size()|| index<=0){
+			if(log.isDebugEnabled()){
+				if(candidates.size() < 100){
+					log.debug("index="+index);
+				}
+			}
+			if(candidates==null || index>candidates.size()|| index<=0){
 				break;
 			}
 			FingerprintVo candidate=candidates.get(index-1);
@@ -62,6 +65,11 @@ public class MySourceAFIS {
 			double score = matcher.match(candidate.getFpTemplate());
 			if (score > threshold) {
 				result.put(FingerprintVo.getLabelReference(Double.valueOf(score).intValue(),index-1), candidate);
+			}
+			if(log.isDebugEnabled()){
+				if(candidates.size() < 100){
+					log.debug("index="+(index-1)+",score="+score);
+				}
 			}
 		}
 		return result;
@@ -74,6 +82,9 @@ public class MySourceAFIS {
 			return result;
 		}
 		FingerprintMatcher matcher = new FingerprintMatcher().index(probe);
+		
+		matcher.index(probe);
+		
 		int index = 0;
 		for (FingerprintVo candidate : candidates) {
 			index++;
@@ -83,6 +94,10 @@ public class MySourceAFIS {
 			double score = matcher.match(candidate.getFpTemplate());
 			if (score > threshold) {
 				result.put(FingerprintVo.getLabelReference(Double.valueOf(score).intValue(),index), candidate);
+			}else{
+//				if(log.isDebugEnabled()){
+//					log.debug("index="+index+",score="+score);
+//				}
 			}
 		}
 		return result;
@@ -91,6 +106,7 @@ public class MySourceAFIS {
 	public static int load(FingerprintVo vo) {
 		// Caching fingerprint templates
 		if(vo== null || vo.getImagePath()==null || vo.getImagePath().trim().equals("")){
+			lastErrrorDescribe = "vo is null or vo.getImagePath() is null.";
 			return -1;
 		}
 		String txtFilePath = "";
@@ -99,7 +115,8 @@ public class MySourceAFIS {
 			try {
 				image = Files.readAllBytes(Paths.get(vo.getImagePath()));
 			} catch (IOException e) {
-				log.warn("Files.readAllBytes("+ vo.getImagePath()+") IOException",e);
+				lastErrrorDescribe = "Files.readAllBytes("+ vo.getImagePath()+") IOException.";
+				log.warn(lastErrrorDescribe,e);
 				return -2;
 			}
 			FingerprintTemplate template = null;
@@ -107,13 +124,14 @@ public class MySourceAFIS {
 				template = new FingerprintTemplate().dpi(500)
 						.create(image);
 			} catch (Throwable e) {
-				log.warn("new FingerprintTemplate().dpi(500).create("+ vo.getImagePath()+") Throwable:"+e.toString());
+				lastErrrorDescribe = "new FingerprintTemplate().dpi(500).create("+ vo.getImagePath()+") Throwable.";
+				log.warn(lastErrrorDescribe,e);
 				return -3;
 			}
 			
 			String jsonTemplate = template.serialize();
 			
-			txtFilePath = ".."+fileSeparator+"external"+fileSeparator+"fingerprint"+fileSeparator+"SourceAFIS"+fileSeparator+"fingerprint-"
+			txtFilePath = ".."+fileSeparator+"external"+fileSeparator+"fingerprint"+fileSeparator+"TissonAFIS"+fileSeparator+"fingerprint-"
 			+ vo.getOwner()
 //			+ "-"
 //			+ new SimpleDateFormat("yyyyMMdd-HHmmss-SSS")
@@ -126,11 +144,28 @@ public class MySourceAFIS {
 			txtFile.createNewFile();
 			FileOutputStream fs = new FileOutputStream(txtFile,
 					true); // 在该文件的末尾添加内容
-			fs.write(("SourceAFIS:"+0+":"+jsonTemplate).getBytes());
+			String jsonTemplateEx = "TissonAFIS:"+0+":"+jsonTemplate;
+			String jsonTemplateZip = ZipUtils.gzip(jsonTemplate);
+			jsonTemplateZip = jsonTemplateZip.replaceAll("\r", "");
+			jsonTemplateZip = jsonTemplateZip.replaceAll("\n", "");
+			String jsonTemplateUnzip = "TissonAFIS:"+0+":"+ZipUtils.gunzip(jsonTemplateZip);
+			if(jsonTemplateZip==null){
+				jsonTemplateZip="";
+			}
+			if(jsonTemplateUnzip==null){
+				jsonTemplateUnzip="";
+			}
+			boolean equal = jsonTemplateUnzip.equals(jsonTemplateEx);
+			
+			log.debug("jsonTemplate.length()="+jsonTemplate.length()+",jsonTemplateZip.length()="+jsonTemplateZip.length()+",equal="+equal);
+			
+			fs.write(("TissonAFIS:"+0+":"+jsonTemplateZip).getBytes());
+			
 			fs.close();
-			return load(vo,jsonTemplate);
+			return load(vo,jsonTemplateZip);
 		} catch (Throwable t) {
-			log.warn("load("+ vo.getImagePath()+") Throwable(txtFilePath="+txtFilePath+")",t);
+			lastErrrorDescribe = "load("+ vo.getImagePath()+") Throwable.(txtFilePath="+txtFilePath+")";
+			log.warn(lastErrrorDescribe,t);
 			return -4;
 		}
 	}
@@ -141,11 +176,9 @@ public class MySourceAFIS {
 			return -1;
 		}
 		try {
-			vo.setFpTemplateJsonStr(jsonTemplate);
-			vo.setFpTemplate(new FingerprintTemplate().deserialize(vo
-					.getFpTemplateJsonStr()));
+			vo.setFpTemplate(new FingerprintTemplate().deserialize(ZipUtils.gunzip(jsonTemplate)));
 			
-			vo.setType(FingerprintTypeEnum.SourceAFIS.getCode());
+			vo.setType(FingerprintTypeEnum.TissonAFIS.getCode());
 			
 		} catch (Throwable t) {
 			log.warn("load("+ vo.getImagePath()+") Throwable",t);
