@@ -5,6 +5,7 @@ package com.tisson.fingerprint.FingerprintSensorTool;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -329,9 +330,17 @@ public class FingerprintSensorHandle {
 		unknowFingerprintArry.clear();
 
 		if (!bCollection) {
-			loadTestBase64(true);
+			loadTestZKTecoBase64(true);
 			if (log.isDebugEnabled()) {
-				log.debug("loadTestBase64 return.fingerprintArry.size()="
+				log.debug("loadTestZKTecoBase64 return.fingerprintArry.size()="
+						+ fingerprintArry.size() + ",iFid=" + iFid
+						+ ",fingerprintDbArry.size()="
+						+ fingerprintDbArry.size() + ",ZKFPService.DBCount()="
+						+ ZKFPService.DBCount());
+			}
+			loadTestISOBase64(true);
+			if (log.isDebugEnabled()) {
+				log.debug("loadTestISOBase64 return.fingerprintArry.size()="
 						+ fingerprintArry.size() + ",iFid=" + iFid
 						+ ",fingerprintDbArry.size()="
 						+ fingerprintDbArry.size() + ",ZKFPService.DBCount()="
@@ -603,12 +612,12 @@ public class FingerprintSensorHandle {
 		String owner = path;
 		// vo.setName(path+"-"+row);
 		String preKey = ".." + fileSeparator + "external" + fileSeparator
-				+ "fingerprint" + fileSeparator + "collect-base64"
+				+ "fingerprint" + fileSeparator + "ZKTeco-collect-base64"
 				+ fileSeparator + "fingerprint-";
 		int preKeyIndex = path.lastIndexOf(preKey);
 		if (preKeyIndex < 0) {
 			preKey = ".." + fileSeparator + "external" + fileSeparator
-					+ "fingerprint" + fileSeparator + "collect-base64"
+					+ "fingerprint" + fileSeparator + "ZKTeco-collect-base64"
 					+ fileSeparator + "";
 			preKeyIndex = path.lastIndexOf(preKey);
 		}
@@ -621,6 +630,12 @@ public class FingerprintSensorHandle {
 		if (preKeyIndex < 0) {
 			preKey = ".." + fileSeparator + "external" + fileSeparator
 					+ "fingerprint" + fileSeparator + "TissonAFIS"
+					+ fileSeparator + "fingerprint-";
+			preKeyIndex = path.lastIndexOf(preKey);
+		}
+		if (preKeyIndex < 0) {
+			preKey = ".." + fileSeparator + "external" + fileSeparator
+					+ "fingerprint" + fileSeparator + "collect-base64"
 					+ fileSeparator + "fingerprint-";
 			preKeyIndex = path.lastIndexOf(preKey);
 		}
@@ -684,8 +699,94 @@ public class FingerprintSensorHandle {
 		return true;
 	}
 
-	private boolean loadTestBase64(boolean printlog) {
+	private boolean loadTestISOBase64(boolean printlog) {
+//	fingerprint-00001-ISO-19794-2-base64
 		String rootPath = "../external/fingerprint/collect-base64";
+		File fileSet = new File(rootPath);
+		File[] files = null;
+		if (!(fileSet.exists() && fileSet.isDirectory())) {
+			log.warn(rootPath + " not exists or is not Directory");
+			return false;
+		}
+		files = fileSet.listFiles();
+		for (int i = 0; i < files.length; i++) {
+			if (!files[i].isFile()) {
+				continue;
+			}
+			String path = files[i].getAbsolutePath();
+			if (printlog) {
+				if (log.isInfoEnabled()) {
+					log.info("[" + df.format(new Date()) + "] path=" + path);
+				}
+			}
+			if (path.indexOf("-ISO-19794-2-base64.txt") <= 0) {
+				continue;
+			}
+			String base64 = readFileByChars(path);
+			FingerprintVo vo = new  FingerprintVo();
+			vo.setOwner(getOwnerByPath(path, 0));
+			
+			byte[] iso =RtsBase64.decode(base64);
+			if(iso==null){
+				continue;
+			}
+			String jsonTemplate=null;
+			try {
+				jsonTemplate = new FingerprintTemplate().convert(iso).serialize();
+			} catch (Throwable t) {
+				log.warn(t.toString()+"(iso.length="+iso.length+")",t);
+			}
+			if(jsonTemplate==null||jsonTemplate.trim().equals("")){
+				continue;
+			}
+			
+			String txtFilePath = ".."+fileSeparator+"external"+fileSeparator+"fingerprint"+fileSeparator+"TissonAFIS"+fileSeparator+"fingerprint-"
+			+ vo.getOwner() 
+//			+ "-"
+//			+ new SimpleDateFormat("yyyyMMdd-HHmmss-SSS")
+//					.format(new Date())
+			+ "-ISO-19794-2.txt";
+			try {
+				File txtFile = new File(txtFilePath);
+				if (txtFile.exists()) {
+					txtFile.delete();
+				}
+				txtFile.createNewFile();
+				FileOutputStream fs = new FileOutputStream(txtFile,
+						true); // 在该文件的末尾添加内容
+				String jsonTemplateEx = "TissonAFIS:"+0+":"+jsonTemplate;
+				String jsonTemplateZip = ZipUtils.gzip(jsonTemplate);
+				jsonTemplateZip = jsonTemplateZip.replaceAll("\r", "");
+				jsonTemplateZip = jsonTemplateZip.replaceAll("\n", "");
+				String jsonTemplateUnzip = "TissonAFIS:"+0+":"+ZipUtils.gunzip(jsonTemplateZip);
+				if(jsonTemplateZip==null){
+					jsonTemplateZip="";
+				}
+				if(jsonTemplateUnzip==null){
+					jsonTemplateUnzip="";
+				}
+				boolean equal = jsonTemplateUnzip.equals(jsonTemplateEx);
+				
+				log.debug("jsonTemplate.length()="+jsonTemplate.length()+",jsonTemplateZip.length()="+jsonTemplateZip.length()+",equal="+equal);
+				
+				fs.write(("TissonAFIS:"+0+":"+jsonTemplateZip).getBytes());
+				
+				fs.close();
+			} catch (Throwable t) {
+				log.warn(t.toString(),t);
+			}
+			
+			TissonAFIS.load(vo,jsonTemplate);
+
+			fingerprintArry.add(vo);
+			fingerprintDbArry.add(iFid - 1, vo);
+			iFid++;
+		}
+		return true;
+	}
+	
+	private boolean loadTestZKTecoBase64(boolean printlog) {
+		String rootPath = "../external/fingerprint/ZKTeco-collect-base64";
 		File fileSet = new File(rootPath);
 		File[] files = null;
 		if (!(fileSet.exists() && fileSet.isDirectory())) {
@@ -1122,15 +1223,6 @@ public class FingerprintSensorHandle {
 				+ thRunSize + ")");
 		return outBuf.toString();
 	}
-
-	// private FingerprintVo getFingerprintVo(int fid){
-	// for(int i=0;i<fingerprintArry.size();i++){
-	// if(fingerprintArry.get(i).getFid()==fid){
-	// return fingerprintArry.get(i);
-	// }
-	// }
-	// return null;
-	// }
 
 	private String identifyTxtFile(String path) {
 		int[] fid = new int[10];
@@ -1617,7 +1709,7 @@ public class FingerprintSensorHandle {
 								+ fileSeparator
 								+ "fingerprint"
 								+ fileSeparator
-								+ "collect-base64"
+								+ "ZKTeco-collect-base64"
 								+ fileSeparator
 								+ "fingerprint-"
 								+ currentOwnerFileName

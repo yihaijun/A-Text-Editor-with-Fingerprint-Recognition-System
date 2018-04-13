@@ -19,8 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 
-
-//import com.regaltec.ccatstep.common.RtsBase64;
+import com.regaltec.ccatstep.common.RtsBase64;
 
 /**
  * @author yihaijun
@@ -28,7 +27,8 @@ import java.util.Properties;
  */
 public class MdbUtils {
 	private static SimpleDateFormat df = new SimpleDateFormat(
-	"yyyy-MM-dd HH:mm:ss:SSS");
+			"yyyy-MM-dd HH:mm:ss:SSS");
+
 	/**
 	 * TODO : 读取文件access
 	 * 
@@ -65,72 +65,27 @@ public class MdbUtils {
 			ResultSetMetaData data = rs.getMetaData();
 			printColumnInfo(data);
 			while (rs.next()) {
-				String vFingerId=rs.getString("vFingerId");
+				String vFingerId = rs.getString("vFingerId");
 				byte[] fpData = rs.getBytes("vFingerDat");
-				
+
 				try {
-//					String kk = RtsBase64.encodeBytes(fpData);
-//					System.out.println("kk="+kk);
-//					FingerprintTemplate fp = new FingerprintTemplate().convert(fpData);
-//					System.out.println("[" + df.format(new Date())+" fp.serialize()="+fp.serialize());
+					String fpDataBase64 = RtsBase64.encodeBytes(fpData);
+					String txtFilePath = "D:\\Program Files (x86)\\MjSystem5.1\\Database\\ChineseSimple\\fingerprint-"+vFingerId+"-ISO-19794-2-base64.txt";
+					File txtFile = new File(txtFilePath);
+					if (txtFile.exists()) {
+						txtFile.delete();
+					}
+					txtFile.createNewFile();
+					FileOutputStream fs = new FileOutputStream(txtFile, true); // 在该文件的末尾添加内容
+
+					fs.write(fpDataBase64.getBytes());
+
+					fs.close();
 				} catch (Throwable t) {
-					System.out.println("[" + df.format(new Date())+"] "+t.toString());
+					System.out.println("[" + df.format(new Date()) + "] "
+							+ t.toString());
 				}
-				
-//				String currentOwnerRegTempBase64  ="libzkfp:"
-//				+ fpData.length
-//				+ ":"+FingerprintSensorEx.BlobToBase64(fpData,
-//						fpData.length);
-//				log.info(vFingerId+"="+currentOwnerRegTempBase64);
-				
-				
-//				for (int i = 1; i <= data.getColumnCount(); i++) {
-//					System.out.println("[" + df.format(new Date())+" data.getColumnType(" + i + ")="
-//							+ data.getColumnType(i));
-//					System.out.println("[" + df.format(new Date())+" data.getColumnTypeName(" + i + ")="
-//							+ data.getColumnTypeName(i));
-//					// log.info(rs.getString(i) + "    ");
-//					// log.info(rs.getString(i) + "    ");
-//					byte[] FPdata1 = new byte[2048]; // 2147483646
-//					byte[] FPdata2 = rs.getBytes("vFingerDat");
-//					if (FPdata2 == null) {
-//						rs.getBlob(i).getBytes(0, 10);
-//						InputStream stram = null;
-//
-//						char[] tempchars = new char[30];
-//						int charread = 0;
-//						InputStreamReader reader = new InputStreamReader(stram);
-//						// 读入多个字符到字符数组中，charread为一次读取字符数
-//						while ((charread = reader.read(tempchars)) != -1) {
-//							if (charread == tempchars.length) {
-//								// outBuf.append(tempchars);
-//							} else {
-//								for (int j = 0; j < charread; i++) {
-//									// outBuf.append(tempchars[i]);
-//								}
-//							}
-//						}
-//						FPdata2 = FPdata1;
-//					}
-//					if (FPdata2 == null) {
-//						System.out.println("[" + df.format(new Date())+" rs.getBytes(\"vFingerDat\")==null");
-//						continue;
-//					}
-//					System.out.println("[" + df.format(new Date())+" FPdata.length=" + FPdata2.length);
-//					try {
-//						writeBitmap(FPdata2, 256, 288, "d:\\123.bmp");
-//						// btnImg.setIcon(new ImageIcon(ImageIO.read(new
-//						// File(fingerprintBmpPath))));
-//					} catch (Throwable e) {
-//						e.printStackTrace();
-//						File fileSet = new File("d:\\124.bmp");
-//						FileOutputStream fs = new FileOutputStream(fileSet,
-//								true);
-//						fs.write(FPdata2);
-//						fs.close();
-//					}
-//				}
-//				log.info();
+
 			}
 		} catch (Throwable e) {
 			e.printStackTrace();
@@ -174,25 +129,40 @@ public class MdbUtils {
 				boolean isReadOnly = data.isReadOnly(i);
 				// 能否出现在where中
 				boolean isSearchable = data.isSearchable(i);
-				System.out.println("[" + df.format(new Date())+" data.getColumnCount()="+data.getColumnCount());
-				System.out.println("[" + df.format(new Date())+" 获得列" + i + "的字段名称:" + columnName);
-				System.out.println("[" + df.format(new Date())+" 获得列" + i + "的类型,返回SqlType中的编号:"
-						+ columnType);
-				System.out.println("[" + df.format(new Date())+" 获得列" + i + "的数据类型名:" + columnTypeName);
-				System.out.println("[" + df.format(new Date())+" 获得列" + i + "所在的Catalog名字:" + catalogName);
-				System.out.println("[" + df.format(new Date())+" 获得列" + i + "对应数据类型的类:" + columnClassName);
-				System.out.println("[" + df.format(new Date())+" 获得列" + i + "在数据库中类型的最大字符个数:"
-						+ columnDisplaySize);
-				System.out.println("[" + df.format(new Date())+" 获得列" + i + "的默认的列的标题:" + columnLabel);
-				System.out.println("[" + df.format(new Date())+" 获得列" + i + "的模式:" + schemaName);
-				System.out.println("[" + df.format(new Date())+" 获得列" + i + "类型的精确度(类型的长度):" + precision);
-				System.out.println("[" + df.format(new Date())+" 获得列" + i + "小数点后的位数:" + scale);
-				System.out.println("[" + df.format(new Date())+" 获得列" + i + "对应的表名:" + data.getTableName(1));
-				System.out.println("[" + df.format(new Date())+" 获得列" + i + "是否自动递增:" + isAutoInctement);
-				System.out.println("[" + df.format(new Date())+" 获得列" + i + "在数据库中是否为货币型:" + isCurrency);
-				System.out.println("[" + df.format(new Date())+" 获得列" + i + "是否为空:" + isNullable);
-				System.out.println("[" + df.format(new Date())+" 获得列" + i + "是否为只读:" + isReadOnly);
-				System.out.println("[" + df.format(new Date())+" 获得列" + i + "能否出现在where中:" + isSearchable);
+				System.out.println("[" + df.format(new Date())
+						+ " data.getColumnCount()=" + data.getColumnCount());
+				System.out.println("[" + df.format(new Date()) + " 获得列" + i
+						+ "的字段名称:" + columnName);
+				System.out.println("[" + df.format(new Date()) + " 获得列" + i
+						+ "的类型,返回SqlType中的编号:" + columnType);
+				System.out.println("[" + df.format(new Date()) + " 获得列" + i
+						+ "的数据类型名:" + columnTypeName);
+				System.out.println("[" + df.format(new Date()) + " 获得列" + i
+						+ "所在的Catalog名字:" + catalogName);
+				System.out.println("[" + df.format(new Date()) + " 获得列" + i
+						+ "对应数据类型的类:" + columnClassName);
+				System.out.println("[" + df.format(new Date()) + " 获得列" + i
+						+ "在数据库中类型的最大字符个数:" + columnDisplaySize);
+				System.out.println("[" + df.format(new Date()) + " 获得列" + i
+						+ "的默认的列的标题:" + columnLabel);
+				System.out.println("[" + df.format(new Date()) + " 获得列" + i
+						+ "的模式:" + schemaName);
+				System.out.println("[" + df.format(new Date()) + " 获得列" + i
+						+ "类型的精确度(类型的长度):" + precision);
+				System.out.println("[" + df.format(new Date()) + " 获得列" + i
+						+ "小数点后的位数:" + scale);
+				System.out.println("[" + df.format(new Date()) + " 获得列" + i
+						+ "对应的表名:" + data.getTableName(1));
+				System.out.println("[" + df.format(new Date()) + " 获得列" + i
+						+ "是否自动递增:" + isAutoInctement);
+				System.out.println("[" + df.format(new Date()) + " 获得列" + i
+						+ "在数据库中是否为货币型:" + isCurrency);
+				System.out.println("[" + df.format(new Date()) + " 获得列" + i
+						+ "是否为空:" + isNullable);
+				System.out.println("[" + df.format(new Date()) + " 获得列" + i
+						+ "是否为只读:" + isReadOnly);
+				System.out.println("[" + df.format(new Date()) + " 获得列" + i
+						+ "能否出现在where中:" + isSearchable);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -279,7 +249,9 @@ public class MdbUtils {
 	}
 
 	public static void main(String[] args) {
-		readFileACCESS(new File("D:\\Program Files (x86)\\MjSystem5.1\\Database\\ChineseSimple\\SystemData_MJ.mdb"),
+		readFileACCESS(
+				new File(
+						"D:\\Program Files (x86)\\MjSystem5.1\\Database\\ChineseSimple\\SystemData_MJ.mdb"),
 				"Select vFingerId,vFingerDat From FP_FingerData");
 	}
 }

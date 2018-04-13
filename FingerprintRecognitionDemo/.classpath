@@ -11,5 +11,6 @@
 	<classpathentry kind="lib" path="lib/javabuilder.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/jna-3.3.0.jar"/>
+	<classpathentry kind="lib" path="/tisson-sfip-app-FingerprintSensorTool/sfiplib/opt/asig.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
