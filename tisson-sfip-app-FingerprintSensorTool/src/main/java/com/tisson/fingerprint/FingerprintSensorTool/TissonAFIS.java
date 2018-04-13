@@ -104,6 +104,9 @@ public class TissonAFIS {
 	}
 	
 	public static int load(FingerprintVo vo) {
+		if(log.isDebugEnabled()){
+			log.debug("vo.getImagePath()="+vo.getImagePath()+",vo.getOwner()="+vo.getOwner());
+		}
 		// Caching fingerprint templates
 		if(vo== null || vo.getImagePath()==null || vo.getImagePath().trim().equals("")){
 			lastErrrorDescribe = "vo is null or vo.getImagePath() is null.";
