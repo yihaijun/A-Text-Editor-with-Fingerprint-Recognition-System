@@ -1052,8 +1052,8 @@ public class FingerprintSensorHandle {
 	private String identifyText(String text) {
 		long beginTime = System.currentTimeMillis();
 
-		if (log.isDebugEnabled()) {
-			log.debug("buildFingerprintVo begin...");
+		if (log.isTraceEnabled()) {
+			log.trace("buildFingerprintVo begin...");
 		}
 		FingerprintVo findVo = buildFingerprintVo(text);
 		if (log.isTraceEnabled()) {
@@ -1154,7 +1154,7 @@ public class FingerprintSensorHandle {
 		if (step < 1) {
 			step = 1;
 		}
-		int endPos = beginPos + step;
+		int endPos = Math.min(iFid-1,beginPos + step);
 		FPMatchTask[] matchTask = new FPMatchTask[thRunSize];
 		int thIndex = 0;
 		for (; endPos < iFid && thIndex < matchTask.length; thIndex++) {

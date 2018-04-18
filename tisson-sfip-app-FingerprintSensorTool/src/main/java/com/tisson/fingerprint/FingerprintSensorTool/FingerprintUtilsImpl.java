@@ -131,10 +131,17 @@ public class FingerprintUtilsImpl implements FingerprintUtilsInf{
 				response.setResult(FingerprintSensorHandle.getInstance().getCmdPrompt());
 			}
 			
+		} catch (Throwable t) {
+			log.warn("",t);
+			response.setResponseCode("FPU02"+HelloWordResponse.KEY_STATUS_FAIL+"000"+ FingerprintSensorHandle.STATE_UNKNOW_ERROR);
+			response.setResult(t.toString());
+		}
+		try{
 			RpcContext.getContext().getResponse(HttpServletResponse.class).addHeader("Access-Control-Allow-Origin","*");
 		} catch (Throwable t) {
 			log.warn("",t);
 			response.setResponseCode("FPU02"+HelloWordResponse.KEY_STATUS_FAIL+"000"+ FingerprintSensorHandle.STATE_UNKNOW_ERROR);
+			response.setResult(t.toString());
 		}
 		if (log.isTraceEnabled()) {
 			log.trace(response.toString());
