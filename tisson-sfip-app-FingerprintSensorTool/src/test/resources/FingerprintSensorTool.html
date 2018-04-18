@@ -119,6 +119,7 @@ p {
 					while(sfipHome.indexOf("\\\\")>=0){
 						sfipHome=sfipHome.replace("\\\\","/");
 					}
+		    		document.getElementById("cmdResult").value=getResponseCode(this.responseText);
 				}
 			}
 		};

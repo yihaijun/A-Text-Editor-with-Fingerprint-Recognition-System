@@ -85,6 +85,7 @@ public class FingerprintUtilsImpl implements FingerprintUtilsInf{
 					needDevice = false;
 				}
 				ret = FingerprintSensorHandle.getInstance().load(needDevice);
+				response.setResponseCode(getResponseCode("01",ret));
 				response.setResult(FingerprintSensorHandle.getInstance().getManufacturer() +"," + FingerprintSensorHandle.getInstance().getFingerprintArryCount()+"/"+FingerprintSensorHandle.getInstance().getFingerprintDbArryCount()+"/"+FingerprintSensorHandle.getInstance().DBCount()+"/"+FingerprintSensorHandle.getInstance().getiFid()+",SfipHome="+com.tisson.sfip.util.SystemUtils.getSfipHome());
 			}else if(msg.getBeanName().equalsIgnoreCase("cmdFreeSensor")){
 				FingerprintSensorHandle.getInstance().FreeSensor();

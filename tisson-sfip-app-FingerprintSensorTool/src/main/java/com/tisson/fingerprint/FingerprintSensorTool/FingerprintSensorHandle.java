@@ -2032,10 +2032,11 @@ public class FingerprintSensorHandle {
 		manufacturer = "";
 		deviceCount = 0;
 		cmdPrompt = "";
-		while (fingerprintArry.size() > 0) {
-			fingerprintArry.remove(0);
-		}
-		;
+
+		fingerprintArry.clear();
+		fingerprintDbArry.clear();
+		unknowFingerprintArry.clear();
+
 		// mbStop=false;
 		mbWork = false;
 		bCollection = false;
