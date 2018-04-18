@@ -14,6 +14,7 @@ import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Hashtable;
+import java.util.TreeMap;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -91,6 +92,7 @@ public class FingerprintSensorHandle {
 	private int enroll_idx = 0;
 
 	private byte[][] regtemparray = new byte[3][2048];
+	private FingerprintTemplate[] fingerprintTemplateArry = new FingerprintTemplate[3];
 
 	// the length of lastRegTemp
 	private int cbRegTemp = 0;
@@ -813,7 +815,7 @@ public class FingerprintSensorHandle {
 				len = Integer.valueOf(lenFlag).intValue();
 			}
 			String[] base64Arry = base64.split("\r\n");
-			int index = 0;
+			int index = -1;
 			for (int j = 0; j < base64Arry.length; j++) {
 				if (base64Arry[j] == null || base64Arry[j].trim().equals("")) {
 					continue;
@@ -856,7 +858,7 @@ public class FingerprintSensorHandle {
 			}
 			String text = readFileByChars(path);
 			String[] jsonTemplateArry = text.split("TissonAFIS:0:");
-			int index = 0;
+			int index = -1;
 			for (int j = 0; j < jsonTemplateArry.length; j++) {
 				if (jsonTemplateArry[j] == null
 						|| jsonTemplateArry[j].trim().equals("")) {
@@ -1099,8 +1101,8 @@ public class FingerprintSensorHandle {
 				&& findVo.getType() == FingerprintTypeEnum.ZKLIB.getCode()) {
 			int ret = 0;
 			int pos = fid[0];
-			StringBuffer outBuf = new StringBuffer();
-			outBuf.delete(0, outBuf.length());
+			TreeMap<String, FingerprintVo> result = new TreeMap<String, FingerprintVo>();
+			
 			int count = 0;
 			int[] record = new int[100];
 			while (ret == 0) {
@@ -1108,7 +1110,7 @@ public class FingerprintSensorHandle {
 				if (count <= record.length) {
 					record[count - 1] = fid[0];
 				}
-				outBuf.append(fid[0] + "=" + score[0] + ";");
+				result.put(FingerprintVo.getLabelReference(score[0],fid[0]),fingerprintDbArry.get(fid[0] - 1));
 				dbDelRet = FingerprintSensorEx.DBDel(mhDB, fid[0]);
 
 				ret = FingerprintSensorEx
@@ -1127,6 +1129,15 @@ public class FingerprintSensorHandle {
 						.get(record[i] - 1).getFpTemplateByteArry());
 			}
 			cmdPrompt = "";
+			StringBuffer outBuf = new StringBuffer();
+			outBuf.delete(0, outBuf.length());
+			java.util.Iterator<String> it = result.keySet().iterator();
+			while (it.hasNext()) {
+				String key = it.next();
+				// String[] keyVaueArry=key.split("_");
+				FingerprintVo vo = result.get(key);
+				outBuf.append(key + "=" + vo.getOwner() + ";");
+			}
 			outBuf.append("(count=" + count + ",duration_1=" + duration_1
 					+ ",duration=" + (System.currentTimeMillis() - beginTime)
 					+ ",DbArrySize=" + fingerprintDbArry.size() + ",DBCount="
@@ -1137,7 +1148,7 @@ public class FingerprintSensorHandle {
 
 		thPool.fetchTask();
 		// long beginTime = System.currentTimeMillis();
-		Hashtable<String, FingerprintVo>[] result = new Hashtable[thRunSize];
+		TreeMap<String, FingerprintVo>[] result = new TreeMap[thRunSize];
 		int beginPos = 1;// fid[0];
 		int step = (iFid - 1 - beginPos) / thRunSize;
 		if (step < 1) {
@@ -1146,12 +1157,12 @@ public class FingerprintSensorHandle {
 		int endPos = beginPos + step;
 		FPMatchTask[] matchTask = new FPMatchTask[thRunSize];
 		int thIndex = 0;
-		if (log.isDebugEnabled()) {
-			log.debug("beginPos=" + beginPos + ",endPos=" + endPos
-					+ ",matchTask.length=" + matchTask.length + ",iFid=" + iFid);
-		}
 		for (; endPos < iFid && thIndex < matchTask.length; thIndex++) {
-			result[thIndex] = new Hashtable<String, FingerprintVo>();
+			if (log.isDebugEnabled()) {
+				log.debug("thIndex="+thIndex+",beginPos=" + beginPos + ",endPos=" + endPos
+						+ ",matchTask.length=" + matchTask.length + ",iFid=" + iFid);
+			}
+			result[thIndex] = new TreeMap<String, FingerprintVo>();
 			matchTask[thIndex] = new FPMatchTask(findVo, minThresholdScore,
 					result[thIndex], beginPos, endPos);
 			thPool.submit(matchTask[thIndex].getName(), matchTask[thIndex], 0);
@@ -1283,9 +1294,8 @@ public class FingerprintSensorHandle {
 			FingerprintVo vo = fingerprintArry.get(i);
 			iFid = java.lang.Math.max(iFid,
 					FingerprintSensorEx.DBCount(mhDevice) + 1);
-			int ret3 = -100;
-			if (vo.getFpTemplateByteArry() != null
-					&& vo.getFpTemplate() == null) {
+			int ret3 = 0;
+			if (vo.getType() == FingerprintTypeEnum.ZKLIB.getCode() && vo.getFpTemplateByteArry() != null) {
 				ret3 = FingerprintSensorEx.DBAdd(mhDevice, iFid,
 						vo.getFpTemplateByteArry());
 			}
@@ -1297,6 +1307,7 @@ public class FingerprintSensorHandle {
 					fingerprintDbArry.add(iFid - 1, vo);
 					iFid++;
 				} else {
+					log.warn("ZKTeco FingerprintSensor FingerprintSensorEx.DBCount return "+ret3);
 					return false;
 				}
 			}
@@ -1552,6 +1563,7 @@ public class FingerprintSensorHandle {
 				if (enroll_idx < regtemparray.length) {
 					System.arraycopy(template, 0, regtemparray[enroll_idx], 0,
 							2048);
+					fingerprintTemplateArry[enroll_idx] = TissonAFIS.imagePath2FingerprintTemplate(fingerprintBmpPath);
 				}
 				enroll_idx++;
 				if (enroll_idx == 3) {
@@ -1657,8 +1669,8 @@ public class FingerprintSensorHandle {
 								TissonAFIS.load(vo);
 								vo.setFpTemplateByteArry(regTemp);
 								vo.setOwner(currentOwner);
-								fingerprintDbArry.add(iFid - 1, vo);
-								iFid++;
+//								fingerprintDbArry.add(iFid - 1, vo);
+//								iFid++;
 							}
 						}
 						if (0 != ret) {
@@ -1681,15 +1693,17 @@ public class FingerprintSensorHandle {
 					// Base64 Template
 					cmdPrompt = "enroll succ";
 
-					currentOwnerRegTempBase64 = "libzkfp:"
-							+ _retLen[0]
-							+ ":"
-							+ FingerprintSensorEx.BlobToBase64(regTemp,
-									_retLen[0]);
+//					currentOwnerRegTempBase64 = "libzkfp:"
+//							+ _retLen[0]
+//							+ ":"
+//							+ FingerprintSensorEx.BlobToBase64(regTemp,
+//									_retLen[0]);
+//
+//					currentOwnerRegTempBase64 = collectName + ":"
+//							+ currentOwnerRegTempBase64;
 
-					currentOwnerRegTempBase64 = collectName + ":"
-							+ currentOwnerRegTempBase64;
-
+					currentOwnerRegTempBase64 = collectName + ":" + TissonAFIS.buildZipJsonTemplateZip(fingerprintTemplateArry);
+					
 					if (bCollection) {
 
 					} else {
@@ -2087,13 +2101,13 @@ public class FingerprintSensorHandle {
 	private class FPMatchTask implements INmaCollectorTaskInf {
 		private FingerprintVo findVo;
 		private int minScore;
-		private Hashtable<String, FingerprintVo> result;
+		private TreeMap<String, FingerprintVo> result;
 		private int beginPos;
 		private int endPos;
 		private String name = "";
 
 		public FPMatchTask(FingerprintVo findVo, int minScore,
-				Hashtable<String, FingerprintVo> result, int beginPos,
+				TreeMap<String, FingerprintVo> result, int beginPos,
 				int endPos) {
 			this.findVo = findVo;
 			this.minScore = minScore;
@@ -2119,7 +2133,7 @@ public class FingerprintSensorHandle {
 				int ret = 0;
 				if (findVo.getType() == FingerprintTypeEnum.TissonAFIS
 						.getCode()) {
-					Hashtable<String, FingerprintVo> findResult = TissonAFIS
+					TreeMap<String, FingerprintVo> findResult = TissonAFIS
 							.find(findVo.getFpTemplate(), fingerprintDbArry,
 									minScore, beginPos, endPos);
 					if (findResult != null) {
@@ -2134,7 +2148,7 @@ public class FingerprintSensorHandle {
 				for (int j = beginPos; j <= endPos; j++) {
 					FingerprintVo vo = fingerprintDbArry.get(j - 1);// getFingerprintVo(j);
 
-					if (findVo.getType() != vo.getType()) {
+					if (findVo.getType() != vo.getType() && vo.getFpTemplateByteArry()==null) {
 						continue;
 					}
 					ret = -1;
@@ -2269,23 +2283,25 @@ public class FingerprintSensorHandle {
 	}
 
 	private void testFGT() {
-//		try {
-//			String hostName = java.net.InetAddress.getLocalHost().getHostName();
-//			if ((!(hostName.equals("yihaijun"))) && (!(hostName.equals("XXJS-XX-YHJ")))) {
-//				return;
-//			}
-//		} catch (Throwable t) {
-//			return;
-//		}
+		try {
+			String hostName = java.net.InetAddress.getLocalHost().getHostName();
+			if ((!(hostName.equals("yihaijun"))) && (!(hostName.equals("XXJS-XX-YHJ")))) {
+				return;
+			}
+		} catch (Throwable t) {
+			return;
+		}
 		try {
 			String zkBase = readFileByChars("D:\\fingerprint-aaa-20180313-182041-987-DBMerge-1164.txt");
 			byte[] zkFpTemplate = new byte[1164];
-			int retB2B = FingerprintSensorEx.Base64ToBlob(zkBase, zkFpTemplate,
-					1164);
-			log.info("retB2B=" + retB2B);
-			FingerprintTemplate zkFp = new FingerprintTemplate()
-					.convert(zkFpTemplate);
-			log.info("zkFp=" + zkFp.serialize());
+			if(zkBase!=null && (!(zkBase.trim().equals("")))){
+				int retB2B = FingerprintSensorEx.Base64ToBlob(zkBase, zkFpTemplate,
+						1164);
+				log.info("retB2B=" + retB2B);
+				FingerprintTemplate zkFp = new FingerprintTemplate()
+						.convert(zkFpTemplate);
+				log.info("zkFp=" + zkFp.serialize());
+			}
 		} catch (Throwable t) {
 			log.warn(t.toString(), t);
 		}

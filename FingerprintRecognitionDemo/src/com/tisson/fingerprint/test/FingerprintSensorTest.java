@@ -74,17 +74,9 @@ public class FingerprintSensorTest {
 			ret = ZKFPService.Initialize();
 			ret = ZKFPService.DBCount();
 			System.out.println("ZKFPService.DBCount() return "+ret);
-			byte []temp=new byte[2048];
-//			ret = ZKFPService.GetTemplateQuality(h,temp);
-			ret = ZKFPService.Terminate();
 		} catch (Throwable e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			try{
-				ret = ZKFPService.GetTemplateQuality();
-			} catch (Throwable e2) {
-				e2.printStackTrace();
-			}
 		}
 		ret = ZKFPService.GetDeviceCount();
 		System.out.println("ZKFPService.DBCount() return "+ret);

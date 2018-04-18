@@ -204,29 +204,27 @@ public class FGTFPTest {
 //		}
 //		System.out.println("FGTFPTest.CreateTemplate return "+ ret);
 		
-		String base64_b1 = readFileByChars("D:\\test\\fgt\\1.txt");
-		String base64_b2 = readFileByChars("D:\\test\\fgt\\2.txt");
-		String base64_1 = readFileByChars("D:\\test\\fgt\\testiso-11.txt");
-		String base64_2 = readFileByChars("D:\\test\\fgt\\testiso-22.txt");
-		String base64_3 = readFileByChars("D:\\test\\fgt\\testiso-3.txt");
+		String []fgt = new String[6];
+		fgt[0] = readFileByChars("D:\\test\\fgt\\1.txt");
+		fgt[1] = readFileByChars("D:\\test\\fgt\\2.txt");
+		fgt[2] = readFileByChars("D:\\test\\fgt\\3.txt");
+		fgt[3] = readFileByChars("D:\\test\\fgt\\testiso-11.txt");
+		fgt[4] = readFileByChars("D:\\test\\fgt\\testiso-22.txt");
+		fgt[5] = readFileByChars("D:\\test\\fgt\\testiso-3.txt");
 
 		StringBuffer buf = new StringBuffer();
 		buf.delete(0, buf.length());
-		for(int i=0;i<3;i++){
+		for(int i=0;i<9;i++){
 			buf.delete(0, buf.length());
 			buf.append("[" + df.format(new Date())+"] UMatchTemplateEx:");
-			ret = FGTFPTest.UMatchTemplateEx(base64_b1.toCharArray(),base64_b1.toCharArray());		
-			buf.append("b1:b1="+ ret+";");
-			ret = FGTFPTest.UMatchTemplateEx(base64_b1.toCharArray(),base64_b2.toCharArray());		
-			buf.append("b1:b2="+ ret+";");
-
-			ret = FGTFPTest.UMatchTemplateEx(base64_1.toCharArray(),base64_1.toCharArray());		
-			buf.append("1:1="+ ret+";");
-			ret = FGTFPTest.UMatchTemplateEx(base64_1.toCharArray(),base64_2.toCharArray());		
-			buf.append("1:2="+ ret+";");
-			ret = FGTFPTest.UMatchTemplateEx(base64_1.toCharArray(),base64_3.toCharArray());		
-			buf.append("1:3="+ ret+";");
-			buf.append(" [" + df.format(new Date())+"]");
+			for (int j =1;j<fgt.length;j++){
+				ret = FGTFPTest.UMatchTemplateEx(fgt[0].toCharArray(),fgt[j].toCharArray());		
+				buf.append("0:"+j+"="+ ret+";");
+				ret = FGTFPTest.UMatchTemplateEx(fgt[1].toCharArray(),fgt[j].toCharArray());		
+				buf.append("1:"+j+"="+ ret+";");
+				ret = FGTFPTest.UMatchTemplateEx(fgt[2].toCharArray(),fgt[j].toCharArray());		
+				buf.append("2:"+j+"="+ ret+";");
+			}
 			System.out.println(buf.toString());
 			try {
 				Thread.sleep(1000);
