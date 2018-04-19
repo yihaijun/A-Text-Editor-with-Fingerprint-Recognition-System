@@ -72,6 +72,14 @@ p {
 		    searchStr = location.search,searchStr,searchs,address;  
 
 			document.getElementById("infFingerprintSensor").value = "";
+
+			cmdEnroll.disabled=true;
+			cmdIdentify.disabled=true;
+			cmdVerify.disabled=true;
+			cmdTxtVerify.disabled=true;
+			cmdCollection.disabled=true;
+			cmdDel.disabled=true;
+		    
 		    
 		if(searchStr.length>1){
 			searchStr = searchStr.substr(1);
@@ -110,18 +118,28 @@ p {
 		httpLoad.onerror = function(e) {};
 		//httpLoad.upload.onprogress = function(e) {};
 		httpLoad.onreadystatechange = function(e) {
-			if(this.status == 200||this.status == 304){
-				if(this.responseText!=""){
-					document.getElementById("infFingerprintSensor").value = getMsgResult(this.responseText);
-					sfipHome=getMsgResult(this.responseText);
-					pos=sfipHome.indexOf("SfipHome=")+9;
-					sfipHome=sfipHome.substr(pos);
-					while(sfipHome.indexOf("\\\\")>=0){
-						sfipHome=sfipHome.replace("\\\\","/");
-					}
-		    		document.getElementById("cmdResult").value=getResponseCode(this.responseText);
-				}
+			if(this.status != 200 && this.status != 304){
+				return;
 			}
+			if(this.responseText==null || this.responseText==""){
+				return;
+			}
+			document.getElementById("infFingerprintSensor").value = getMsgResult(this.responseText);
+			sfipHome=getMsgResult(this.responseText);
+			pos=sfipHome.indexOf("SfipHome=")+9;
+			sfipHome=sfipHome.substr(pos);
+			while(sfipHome.indexOf("\\\\")>=0){
+				sfipHome=sfipHome.replace("\\\\","/");
+			}
+    		document.getElementById("cmdResult").value=getResponseCode(this.responseText);
+    		if(getResponseCode(this.responseText)=="FPU0100000000"){
+    			cmdEnroll.disabled=false;
+    			cmdIdentify.disabled=false;
+    			cmdVerify.disabled=false;
+    			cmdTxtVerify.disabled=false;
+    			cmdCollection.disabled=false;
+    			cmdDel.disabled=false;
+    		}
 		};
 		httpLoad.onerror = function(e) { document.getElementById("cmdError").value=e; };
 		httpLoad.open("POST",url,true);
@@ -138,434 +156,519 @@ p {
 		};
 		   
 		cmdCollection.onclick = function(){
-				cmdEnroll.disabled=true;
-				cmdIdentify.disabled=true;
-				cmdVerify.disabled=true;
-				cmdTxtVerify.disabled=true;
-				cmdCollection.disabled=true;
-				cmdDel.disabled=true;
-				document.getElementById("cmdPrompt").value="请你按同一个手指三次!";
-				document.getElementById("cmdResult").value="";
-				document.getElementById("cmdError").value="";
-				clearInterval( cmdTimer );
-				var xmlhttp=null;
-				xmlhttp=new XMLHttpRequest();
+			var cmdFinshed = false;
+			cmdEnroll.disabled=true;
+			cmdIdentify.disabled=true;
+			cmdVerify.disabled=true;
+			cmdTxtVerify.disabled=true;
+			cmdCollection.disabled=true;
+			cmdDel.disabled=true;
+			document.getElementById("cmdPrompt").value="";
+			document.getElementById("cmdResult").value="";
+			document.getElementById("cmdError").value="";
+
+			
+			clearInterval( cmdTimer );
+			
+			var xmlhttp=null;
+			xmlhttp=new XMLHttpRequest();
 			xmlhttp.onload = function(e) {};
 			xmlhttp.ontimeout = function(e) {};
 			xmlhttp.onerror = function(e) {};
 			//xmlhttp.upload.onprogress = function(e) {};
 			xmlhttp.onreadystatechange = function(e) {
-					if(this.status == 200||this.status == 304){
-					}
-				};
-				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
-				xmlhttp.open("POST",url,true);
-		  	xmlhttp.timeout = 500000;
-		  	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-				xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdCollection\",\"msg\":\"\"}");
-
-				
-		   	barEnrollProgress.style.width = '0';
-		   	cmdTimer = setInterval( function(){
-		   		cmdEnrollProgressBarValue = parseInt( getStyle( barEnrollProgress, 'width' ) );
-			 	if ( cmdEnrollProgressBarValue < 500 ) {
-   				  httpGetCurrentOwnerRegTempBase64=new XMLHttpRequest();
+				if(this.status != 200 && this.status != 304){
+					return;
+				}
+				if(this.responseText==null || this.responseText==""){
+					return;
+				}
+	    		document.getElementById("cmdResult").value=getResponseCode(this.responseText);
+		    	if(getResponseCode(this.responseText)!="FPU0100000000"){
+	    			cmdEnroll.disabled=false;
+	    			cmdIdentify.disabled=false;
+	    			cmdVerify.disabled=false;
+	    			cmdTxtVerify.disabled=false;
+	    			cmdCollection.disabled=false;
+	    			cmdDel.disabled=false;
+	    			cmdFinshed=true;
+	    			return;
+		    	}
+				document.getElementById("cmdPrompt").value="请你按同一个手指三次!";
+				document.getElementById("cmdResult").value="";
+				document.getElementById("cmdError").value="";
+				barEnrollProgress.style.width = '0';
+				cmdTimer = setInterval( function(){
+			   		cmdEnrollProgressBarValue = parseInt( getStyle( barEnrollProgress, 'width' ) );
+					var httpGetCurrentOwnerRegTempBase64=new XMLHttpRequest();
    	    			httpGetCurrentOwnerRegTempBase64.onload = function(e) {};
    	    			httpGetCurrentOwnerRegTempBase64.ontimeout = function(e) {};
    	    			httpGetCurrentOwnerRegTempBase64.onerror = function(e) {};
    	    			//httpGetCurrentOwnerRegTempBase64.upload.onprogress = function(e) {};
    	    			httpGetCurrentOwnerRegTempBase64.onreadystatechange = function(e) {
-   	    					if(this.status == 200||this.status == 304 ){
-//   				 		barEnrollProgress.style.width = barEnrollProgress.offsetWidth + 10 + 'px';
-//   				  	barEnrollProgress.innerHTML = parseInt( getStyle( barEnrollProgress, 'width' ) ) / 5 + '%';
-// 				document.getElementById("infFingerprintSensor").value ="kkkk"+this.responseText  +"["+getResponseCode(this.responseText)+"]["+this.responseText+"]";
- 								cmdErrorCode=getResponseCode(this.responseText);
- 								document.getElementById("cmdError").value="错误码:"+cmdErrorCode;
-    			    		document.getElementById("cmdResult").value=getMsgResult(this.responseText);
- 								if(cmdErrorCode==""){
-	     			    		document.getElementById("cmdResult").value="错误:"+getMsgResult(this.responseText);
- 								}else if(cmdErrorCode=="FPU0099000003"){
-					  	barEnrollProgress.style.width = '50px'
-					     	barEnrollProgress.innerHTML = '10%'
-		 	    				document.getElementById("cmdPrompt").value="请按同一个手指3次"+"("+getMsgResult(this.responseText)+")";
-								}else if(cmdErrorCode=="FPU0199000003"){
-					  	barEnrollProgress.style.width = '50px'
-					  	barEnrollProgress.innerHTML = '10%'
-	     	    					document.getElementById("cmdPrompt").value="请按同一个手指3次"+"("+getMsgResult(this.responseText)+")";
-								}else if(cmdErrorCode=="FPU0099000002"){
-					  	barEnrollProgress.style.width = (33 * 5) +'px'
-						barEnrollProgress.innerHTML = '33%'
-		   	    				document.getElementById("cmdPrompt").value="请再继续按同一个手指2次"+"("+getMsgResult(this.responseText)+")";
-					  }else if (cmdErrorCode=="FPU0199000002"){
-					  	barEnrollProgress.style.width = (33 * 5) +'px'
-						barEnrollProgress.innerHTML = '33%'
-		   	    				document.getElementById("cmdPrompt").value="请再继续按同一个手指2次"+"("+getMsgResult(this.responseText)+")";
-					  }else if(cmdErrorCode=="FPU0099000001"){
-					  	barEnrollProgress.style.width = (33 * 5 *2) +'px'
-						barEnrollProgress.innerHTML = '66%'
-			 	    			document.getElementById("cmdPrompt").value="请再继续按同一个手指1次"+"("+getMsgResult(this.responseText)+")";
-					 }else if(cmdErrorCode=="FPU0199000001"){
-					  	barEnrollProgress.style.width = (33 * 5 *2) +'px'
-						barEnrollProgress.innerHTML = '66%'
-			 	    			document.getElementById("cmdPrompt").value="请再继续按同一个手指1次"+"("+getMsgResult(this.responseText)+")";
-					 }else{
-				    			document.getElementById("cmdPrompt").value="";
-				  			clearInterval( cmdTimer );
-									cmdEnroll.disabled=false;
-									cmdIdentify.disabled=false;
-									cmdVerify.disabled=false;
-									cmdTxtVerify.disabled=false;
-									cmdCollection.disabled=false;
-									cmdDel.disabled=false;
-					  	if(cmdErrorCode=="FPU0100000000" || cmdErrorCode=="FPU0100000004" || cmdErrorCode=="FPU0000000000" || cmdErrorCode=="FPU0000000004"){
-						  	barEnrollProgress.style.width = '500px'
-    						  barEnrollProgress.innerHTML = '100%'
-	  		     	    			document.getElementById("cmdPrompt").value="";
-					    		document.getElementById("cmdResult").value=getMsgResult(this.responseText);
-					  	}
-    	    					}
-   	    					}
-   	    				};
-   	    				httpGetCurrentOwnerRegTempBase64.onerror = function(e) { document.getElementById("cmdError").value=e; };
-   	    				httpGetCurrentOwnerRegTempBase64.open("POST",url,true);
-   	    		  	httpGetCurrentOwnerRegTempBase64.timeout = 500000;
-   	    		  	httpGetCurrentOwnerRegTempBase64.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-   	    				httpGetCurrentOwnerRegTempBase64.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwnerRegTempBase64\",\"msg\":\"\"}");
-		    	}
-		   	}, 100 );
-	     	}
+	 					if(this.status != 200 && this.status != 304 ){
+	 						return;
+	 					}
+	 					if(this.responseText==null || this.responseText==""){
+	 						return;
+	 					}
+						cmdErrorCode=getResponseCode(this.responseText);
+						document.getElementById("cmdError").value="";
+						if(cmdErrorCode!="FPU0000000000"){
+							document.getElementById("cmdError").value="错误码:"+cmdErrorCode;
+						}
+						document.getElementById("cmdResult").value=getMsgResult(this.responseText);
+						if(cmdErrorCode==""){
+						 	document.getElementById("cmdResult").value="错误:"+getMsgResult(this.responseText);
+						}else if(cmdErrorCode=="FPU0099000003" || cmdErrorCode=="FPU0199000003"){
+							barEnrollProgress.style.width = '50px'
+							barEnrollProgress.innerHTML = '10%'
+						   	document.getElementById("cmdPrompt").value="请按同一个手指3次"+"("+getMsgResult(this.responseText)+")";
+						}else if (cmdErrorCode=="FPU0099000002" || cmdErrorCode=="FPU0199000002"){
+	  						barEnrollProgress.style.width = (33 * 5) +'px'
+							barEnrollProgress.innerHTML = '33%'
+		    				document.getElementById("cmdPrompt").value="请再继续按同一个手指2次"+"("+getMsgResult(this.responseText)+")";
+						}else if(cmdErrorCode=="FPU0099000001" || cmdErrorCode=="FPU0199000001"){
+	  						barEnrollProgress.style.width = (33 * 5 *2) +'px'
+							barEnrollProgress.innerHTML = '66%'
+	    					document.getElementById("cmdPrompt").value="请再继续按同一个手指1次"+"("+getMsgResult(this.responseText)+")";
+						}else{
+						    document.getElementById("cmdPrompt").value="";
+						    cmdFinshed=true;
+						  	clearInterval( cmdTimer );
+							cmdEnroll.disabled=false;
+							cmdIdentify.disabled=false;
+							cmdVerify.disabled=false;
+							cmdTxtVerify.disabled=false;
+							cmdCollection.disabled=false;
+							cmdDel.disabled=false;
+						  	if(cmdErrorCode=="FPU0100000000" || cmdErrorCode=="FPU0100000004" || cmdErrorCode=="FPU0000000000" || cmdErrorCode=="FPU0000000004"){
+							  	barEnrollProgress.style.width = '500px'
+								barEnrollProgress.innerHTML = '100%'
+						  	}
+		    			}
+					};
+					httpGetCurrentOwnerRegTempBase64.onerror = function(e) { document.getElementById("cmdError").value=e; };
+					httpGetCurrentOwnerRegTempBase64.open("POST",url,true);
+				  	httpGetCurrentOwnerRegTempBase64.timeout = 500000;
+				  	httpGetCurrentOwnerRegTempBase64.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+				  	if(!cmdFinshed){
+						httpGetCurrentOwnerRegTempBase64.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwnerRegTempBase64\",\"msg\":\"\"}");
+					}
+				}, 100 );
+			};
+			xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
+			xmlhttp.open("POST",url,true);
+			xmlhttp.timeout = 500000;
+			xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+			xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdCollection\",\"msg\":\"\"}");
+		}
 
-   			cmdEnroll.onclick = function(){
-				cmdEnroll.disabled=true;
-				cmdIdentify.disabled=true;
-				cmdVerify.disabled=true;
-				cmdTxtVerify.disabled=true;
-				cmdCollection.disabled=true;
-				cmdDel.disabled=true;
+		cmdEnroll.onclick = function(){
+			var cmdFinshed=false;
+			cmdEnroll.disabled=true;
+			cmdIdentify.disabled=true;
+			cmdVerify.disabled=true;
+			cmdTxtVerify.disabled=true;
+			cmdCollection.disabled=true;
+			cmdDel.disabled=true;
+			document.getElementById("cmdPrompt").value="";
+			document.getElementById("cmdResult").value="";
+			document.getElementById("cmdError").value="";
+
+			
+			clearInterval( cmdTimer );
+			
+			var xmlhttp=null;
+			xmlhttp=new XMLHttpRequest();
+			xmlhttp.onload = function(e) {};
+			xmlhttp.ontimeout = function(e) {};
+			xmlhttp.onerror = function(e) {};
+			//xmlhttp.upload.onprogress = function(e) {};
+			xmlhttp.onreadystatechange = function(e) {
+				if(this.status != 200 && this.status != 304){
+					return;
+				}
+				if(this.responseText==null || this.responseText==""){
+					return;
+				}
+	    		document.getElementById("cmdResult").value=getResponseCode(this.responseText);
+		    	if(getResponseCode(this.responseText)!="FPU0100000000"){
+	    			cmdEnroll.disabled=false;
+	    			cmdIdentify.disabled=false;
+	    			cmdVerify.disabled=false;
+	    			cmdTxtVerify.disabled=false;
+	    			cmdCollection.disabled=false;
+	    			cmdDel.disabled=false;
+	    			cmdFinshed=true;
+	    			return;
+		    	}
 				document.getElementById("cmdPrompt").value="请你按同一个手指三次!";
 				document.getElementById("cmdResult").value="";
 				document.getElementById("cmdError").value="";
-				clearInterval( cmdTimer );
-				var xmlhttp=null;
-				xmlhttp=new XMLHttpRequest();
+				barEnrollProgress.style.width = '0';
+				cmdTimer = setInterval( function(){
+			   		cmdEnrollProgressBarValue = parseInt( getStyle( barEnrollProgress, 'width' ) );
+					var httpGetCurrentOwnerRegTempBase64=new XMLHttpRequest();
+   	    			httpGetCurrentOwnerRegTempBase64.onload = function(e) {};
+   	    			httpGetCurrentOwnerRegTempBase64.ontimeout = function(e) {};
+   	    			httpGetCurrentOwnerRegTempBase64.onerror = function(e) {};
+   	    			//httpGetCurrentOwnerRegTempBase64.upload.onprogress = function(e) {};
+   	    			httpGetCurrentOwnerRegTempBase64.onreadystatechange = function(e) {
+	 					if(this.status != 200 && this.status != 304 ){
+	 						return;
+	 					}
+	 					if(this.responseText==null || this.responseText==""){
+	 						return;
+	 					}
+						cmdErrorCode=getResponseCode(this.responseText);
+						document.getElementById("cmdError").value="";
+						if(cmdErrorCode!="FPU0000000000"){
+							document.getElementById("cmdError").value="错误码:"+cmdErrorCode;
+						}
+						document.getElementById("cmdResult").value=getMsgResult(this.responseText);
+						if(cmdErrorCode==""){
+						 	document.getElementById("cmdResult").value="错误:"+getMsgResult(this.responseText);
+						}else if(cmdErrorCode=="FPU0099000003" || cmdErrorCode=="FPU0199000003"){
+							barEnrollProgress.style.width = '50px'
+							barEnrollProgress.innerHTML = '10%'
+						   	document.getElementById("cmdPrompt").value="请按同一个手指3次"+"("+getMsgResult(this.responseText)+")";
+						}else if (cmdErrorCode=="FPU0099000002" || cmdErrorCode=="FPU0199000002"){
+	  						barEnrollProgress.style.width = (33 * 5) +'px'
+							barEnrollProgress.innerHTML = '33%'
+		    				document.getElementById("cmdPrompt").value="请再继续按同一个手指2次"+"("+getMsgResult(this.responseText)+")";
+						}else if(cmdErrorCode=="FPU0099000001" || cmdErrorCode=="FPU0199000001"){
+	  						barEnrollProgress.style.width = (33 * 5 *2) +'px'
+							barEnrollProgress.innerHTML = '66%'
+	    					document.getElementById("cmdPrompt").value="请再继续按同一个手指1次"+"("+getMsgResult(this.responseText)+")";
+						}else{
+						    document.getElementById("cmdPrompt").value="";
+						    cmdFinshed =true;
+						  	clearInterval( cmdTimer );
+							cmdEnroll.disabled=false;
+							cmdIdentify.disabled=false;
+							cmdVerify.disabled=false;
+							cmdTxtVerify.disabled=false;
+							cmdCollection.disabled=false;
+							cmdDel.disabled=false;
+						  	if(cmdErrorCode=="FPU0100000000" || cmdErrorCode=="FPU0100000004" || cmdErrorCode=="FPU0000000000" || cmdErrorCode=="FPU0000000004"){
+							  	barEnrollProgress.style.width = '500px'
+								barEnrollProgress.innerHTML = '100%'
+						  	}
+		    			}
+					};
+					httpGetCurrentOwnerRegTempBase64.onerror = function(e) { document.getElementById("cmdError").value=e; };
+					httpGetCurrentOwnerRegTempBase64.open("POST",url,true);
+				  	httpGetCurrentOwnerRegTempBase64.timeout = 500000;
+				  	httpGetCurrentOwnerRegTempBase64.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+				  	if(!cmdFinshed){
+						httpGetCurrentOwnerRegTempBase64.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwnerRegTempBase64\",\"msg\":\"\"}");
+					}
+				}, 100 );
+			};
+			xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
+			xmlhttp.open("POST",url,true);
+			xmlhttp.timeout = 500000;
+			xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+			xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdEnroll\",\"msg\":\""+document.getElementById("cmdInput").value+"\"}");
+		}
+	     
+		cmdIdentify.onclick = function(){
+			var cmdFinshed = false;
+			cmdEnroll.disabled=true;
+			cmdIdentify.disabled=true;
+			cmdVerify.disabled=true;
+			cmdTxtVerify.disabled=true;
+			cmdCollection.disabled=true;
+			cmdDel.disabled=true;
+			document.getElementById("cmdPrompt").value="";
+			document.getElementById("cmdResult").value="";
+			document.getElementById("cmdError").value="";
+
+			clearInterval( cmdTimer );
+				
+			var xmlhttp=null;
+			xmlhttp=new XMLHttpRequest();
 			xmlhttp.onload = function(e) {};
 			xmlhttp.ontimeout = function(e) {};
 			xmlhttp.onerror = function(e) {};
 			//xmlhttp.upload.onprogress = function(e) {};
 			xmlhttp.onreadystatechange = function(e) {
-					if(this.status == 200||this.status == 304){
-					}
-				};
-				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
-				xmlhttp.open("POST",url,true);
-		  	xmlhttp.timeout = 500000;
-		  	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-				xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdEnroll\",\"msg\":\""+document.getElementById("cmdInput").value+"\"}");
-
-				
-		   	barEnrollProgress.style.width = '0';
-		   	cmdTimer = setInterval( function(){
-		   		cmdEnrollProgressBarValue = parseInt( getStyle( barEnrollProgress, 'width' ) );
-			 	if ( cmdEnrollProgressBarValue < 500 ) {
-			 		httpGetCurrentOwnerRegTempBase64=new XMLHttpRequest();
-			 		httpGetCurrentOwnerRegTempBase64.onload = function(e) {};
-			 		httpGetCurrentOwnerRegTempBase64.ontimeout = function(e) {};
-			 		httpGetCurrentOwnerRegTempBase64.onerror = function(e) {};
-   	    			//httpGetCmdPrompt.upload.onprogress = function(e) {};
-   	    			httpGetCurrentOwnerRegTempBase64.onreadystatechange = function(e) {
-   	    					if(this.status == 200||this.status == 304){
-//   				 		barEnrollProgress.style.width = barEnrollProgress.offsetWidth + 10 + 'px';
-//   				  	barEnrollProgress.innerHTML = parseInt( getStyle( barEnrollProgress, 'width' ) ) / 5 + '%';
-// 				document.getElementById("infFingerprintSensor").value ="kkkk"+this.responseText  +"["+getResponseCode(this.responseText)+"]["+this.responseText+"]";
- 								cmdErrorCode=getResponseCode(this.responseText);
- 								document.getElementById("cmdError").value="错误码:"+cmdErrorCode;
-    			    		document.getElementById("cmdResult").value=getMsgResult(this.responseText);
- 								if(cmdErrorCode==""){
-	     			    		document.getElementById("cmdResult").value="错误:"+getMsgResult(this.responseText);
- 								}else if(cmdErrorCode=="FPU0099000003"){
-					  	barEnrollProgress.style.width = '50px'
-					     	barEnrollProgress.innerHTML = '10%'
-		 	    				document.getElementById("cmdPrompt").value="请按同一个手指3次"+"("+getMsgResult(this.responseText)+")";
-								}else if(cmdErrorCode=="FPU0199000003"){
-					  	barEnrollProgress.style.width = '50px'
-					  	barEnrollProgress.innerHTML = '10%'
-	     	    					document.getElementById("cmdPrompt").value="请按同一个手指3次"+"("+getMsgResult(this.responseText)+")";
-								}else if(cmdErrorCode=="FPU0099000002"){
-					  	barEnrollProgress.style.width = (33 * 5) +'px'
-						barEnrollProgress.innerHTML = '33%'
-		   	    				document.getElementById("cmdPrompt").value="请再继续按同一个手指2次"+"("+getMsgResult(this.responseText)+")";
-					  }else if (cmdErrorCode=="FPU0199000002"){
-					  	barEnrollProgress.style.width = (33 * 5) +'px'
-						barEnrollProgress.innerHTML = '33%'
-		   	    				document.getElementById("cmdPrompt").value="请再继续按同一个手指2次"+"("+getMsgResult(this.responseText)+")";
-					  }else if(cmdErrorCode=="FPU0099000001"){
-					  	barEnrollProgress.style.width = (33 * 5 *2) +'px'
-						barEnrollProgress.innerHTML = '66%'
-			 	    			document.getElementById("cmdPrompt").value="请再继续按同一个手指1次"+"("+getMsgResult(this.responseText)+")";
-					 }else if(cmdErrorCode=="FPU0199000001"){
-					  	barEnrollProgress.style.width = (33 * 5 *2) +'px'
-						barEnrollProgress.innerHTML = '66%'
-			 	    			document.getElementById("cmdPrompt").value="请再继续按同一个手指1次"+"("+getMsgResult(this.responseText)+")";
-					 }else{
-		     	    			document.getElementById("cmdPrompt").value="";
-				  			clearInterval( cmdTimer );
-									cmdEnroll.disabled=false;
-									cmdIdentify.disabled=false;
-									cmdVerify.disabled=false;
-									cmdTxtVerify.disabled=false;
-									cmdCollection.disabled=false;
-									cmdDel.disabled=false;
-					  	if(cmdErrorCode=="FPU0100000000" || cmdErrorCode=="FPU0100000004" || cmdErrorCode=="FPU0000000000" || cmdErrorCode=="FPU0000000004"){
-						  	barEnrollProgress.style.width = '500px'
-    						  barEnrollProgress.innerHTML = '100%'
-	  		     	    			document.getElementById("cmdPrompt").value="";
-					    		document.getElementById("cmdResult").value=getMsgResult(this.responseText);
-					  	}
-    	    					}
-   	    					}
-   	    				};
-   	    				httpGetCurrentOwnerRegTempBase64.onerror = function(e) { document.getElementById("cmdError").value=e; };
-   	    				httpGetCurrentOwnerRegTempBase64.open("POST",url,true);
-   	    		  	httpGetCurrentOwnerRegTempBase64.timeout = 500000;
-   	    		  	httpGetCurrentOwnerRegTempBase64.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-   	    				httpGetCurrentOwnerRegTempBase64.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwnerRegTempBase64\",\"msg\":\"\"}");
-			 	}
-		   	}, 100 );
-	     	}
-	     
-			cmdIdentify.onclick = function(){
-				cmdEnroll.disabled=true;
-				cmdIdentify.disabled=true;
-				cmdVerify.disabled=true;
-				cmdTxtVerify.disabled=true;
-				cmdCollection.disabled=true;
-				cmdDel.disabled=false;
+				if(this.status != 200 && this.status != 304){
+					return;
+				}
+				if(this.responseText==null || this.responseText==""){
+					return;
+				}
+	    		document.getElementById("cmdResult").value=getResponseCode(this.responseText);
+		    	if(getResponseCode(this.responseText)!="FPU0100000000"){
+	    			cmdEnroll.disabled=false;
+	    			cmdIdentify.disabled=false;
+	    			cmdVerify.disabled=false;
+	    			cmdTxtVerify.disabled=false;
+	    			cmdCollection.disabled=false;
+	    			cmdDel.disabled=false;
+	    			cmdFinshed=true;
+	    			return;
+		    	}
 				document.getElementById("cmdPrompt").value="请按手指!";
 				document.getElementById("cmdResult").value="";
 				document.getElementById("cmdError").value="";
-				clearInterval( cmdTimer );
-				var xmlhttp=null;
-				xmlhttp=new XMLHttpRequest();
-			xmlhttp.onload = function(e) {};
-			xmlhttp.ontimeout = function(e) {};
-			xmlhttp.onerror = function(e) {};
-			//xmlhttp.upload.onprogress = function(e) {};
-			xmlhttp.onreadystatechange = function(e) {
-					if(this.status == 200||this.status == 304){
-					}
-				};
-				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
-				xmlhttp.open("POST",url,true);
-		  	xmlhttp.timeout = 500000;
-		  	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-				xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdIdentify\",\"msg\":\"\"}");
-
    				cmdTimer = setInterval( function(){
-			  httpGetCmdPrompt=new XMLHttpRequest();
-    			httpGetCmdPrompt.onload = function(e) {};
-    			httpGetCmdPrompt.ontimeout = function(e) {};
-    			httpGetCmdPrompt.onerror = function(e) {};
-    			//httpGetCmdPrompt.upload.onprogress = function(e) {};
-    			httpGetCmdPrompt.onreadystatechange = function(e) {
-    					if(this.status == 200||this.status == 304){
-    						document.getElementById("cmdPrompt").value=getMsgResult(this.responseText);
-							if(this.responseText.indexOf("Identify suc")>=0  || this.responseText.indexOf("Identify fail")>=0 ){
-								//clearInterval( cmdTimer );
-							}
-							if(this.responseText.indexOf("Identify suc") >=0 ){
-								clearInterval( cmdTimer );
-								var xmlhttp=null;
-								xmlhttp=new XMLHttpRequest();
-							xmlhttp.onload = function(e) {};
-							xmlhttp.ontimeout = function(e) {};
-							xmlhttp.onerror = function(e) {};
-							//xmlhttp.upload.onprogress = function(e) {};
-							xmlhttp.onreadystatechange = function(e) {
-									if(this.status == 200||this.status == 304){
-										document.getElementById("cmdResult").value=getMsgResult(this.responseText);
-										cmdEnroll.disabled=false;
-										cmdIdentify.disabled=false;
-										cmdVerify.disabled=false;
-										cmdTxtVerify.disabled=false;
-										cmdCollection.disabled=false;
-										cmdDel.disabled=false;
-									}
-								};
-								xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
-								xmlhttp.open("POST",url,true);
-						  	xmlhttp.timeout = 500000;
-						  	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-								xmlhttp.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwner\",\"msg\":\"\"}");
-							}
-    					}
-    				};
-    				httpGetCmdPrompt.onerror = function(e) { document.getElementById("cmdError").value=e; };
-    				httpGetCmdPrompt.open("POST",url,true);
-    		  	httpGetCmdPrompt.timeout = 500000;
-    		  	httpGetCmdPrompt.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-    				httpGetCmdPrompt.send("{\"appName\":\"\",\"beanName\":\"getCmdPrompt\",\"msg\":\"\"}");
-		   	}, 1000 );
-			}
+					httpGetCmdPrompt=new XMLHttpRequest();
+   	    			httpGetCmdPrompt.onload = function(e) {};
+   	    			httpGetCmdPrompt.ontimeout = function(e) {};
+   	    			httpGetCmdPrompt.onerror = function(e) {};
+   	    			//httpGetCmdPrompt.upload.onprogress = function(e) {};
+   	    			httpGetCmdPrompt.onreadystatechange = function(e) {
+   	    				if(this.status != 200 && this.status != 304){
+   	    					return;
+   	    				}
+   	    				if(this.responseText==null || this.responseText==""){
+   	    					return;
+   	    				}
+  	    				document.getElementById("cmdPrompt").value="请按手指!("+getMsgResult(this.responseText)+")";
+						clearInterval( cmdTimer );
+   						if(this.responseText.indexOf("Identify suc") >=0 ){
+   							cmdFinshed=true;
+   							var httpGetCurrentOwner=null;
+   								httpGetCurrentOwner=new XMLHttpRequest();
+   								httpGetCurrentOwner.onload = function(e) {};
+   								httpGetCurrentOwner.ontimeout = function(e) {};
+   								httpGetCurrentOwner.onerror = function(e) {};
+   								//httpGetCurrentOwner.upload.onprogress = function(e) {};
+   							httpGetCurrentOwner.onreadystatechange = function(e) {
+								if(this.status != 200 && this.status != 304){
+									return;
+								}
+								if(this.responseText==null || this.responseText==""){
+									return;
+								}
+								if(getMsgResult(this.responseText)!=null && getMsgResult(this.responseText)!=""){
+									document.getElementById("cmdResult").value=getMsgResult(this.responseText);
+		   							document.getElementById("cmdPrompt").value="";
+								}
+								cmdEnroll.disabled=false;
+								cmdIdentify.disabled=false;
+								cmdVerify.disabled=false;
+								cmdTxtVerify.disabled=false;
+								cmdCollection.disabled=false;
+								cmdDel.disabled=false;
+							};
+							httpGetCurrentOwner.onerror = function(e) { document.getElementById("cmdError").value=e; };
+							httpGetCurrentOwner.open("POST",url,true);
+							httpGetCurrentOwner.timeout = 500000;
+							httpGetCurrentOwner.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+							httpGetCurrentOwner.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwner\",\"msg\":\"\"}");
+   						}
+   	    			};
+	   				httpGetCmdPrompt.onerror = function(e) { document.getElementById("cmdError").value=e; };
+	   				httpGetCmdPrompt.open("POST",url,true);
+	   		  		httpGetCmdPrompt.timeout = 500000;
+	   		  		httpGetCmdPrompt.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+	   		  		if(!cmdFinshed){
+		   				httpGetCmdPrompt.send("{\"appName\":\"\",\"beanName\":\"getCmdPrompt\",\"msg\":\"\"}");
+	   		  		}
+		   		}, 1000 );
+			};
+			xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
+			xmlhttp.open("POST",url,true);
+	  		xmlhttp.timeout = 500000;
+	  		xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+			xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdIdentify\",\"msg\":\"\"}");
+		}
 
-			cmdVerify.onclick = function(){
-				document.getElementById("cmdPrompt").value="";
-				document.getElementById("cmdResult").value="";
-				document.getElementById("cmdError").value="";
-				clearInterval( cmdTimer );
-				var xmlhttp=null;
-				xmlhttp=new XMLHttpRequest();
+		cmdVerify.onclick = function(){
+			document.getElementById("cmdPrompt").value="";
+			document.getElementById("cmdResult").value="";
+			document.getElementById("cmdError").value="";
+			clearInterval( cmdTimer );
+			var xmlhttp=null;
+			xmlhttp=new XMLHttpRequest();
 			xmlhttp.onload = function(e) {};
 			xmlhttp.ontimeout = function(e) {};
 			xmlhttp.onerror = function(e) {};
 			//xmlhttp.upload.onprogress = function(e) {};
 			xmlhttp.onreadystatechange = function(e) {
-					if(this.status == 200||this.status == 304){
-						document.getElementById("cmdResult").value=getMsgResult(this.responseText);
-					}
-				};
-				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
-				xmlhttp.open("POST",url,true);
+				if(this.status == 200||this.status == 304){
+					document.getElementById("cmdResult").value=getMsgResult(this.responseText);
+				}
+			};
+			xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
+			xmlhttp.open("POST",url,true);
 		  	xmlhttp.timeout = 500000;
 		  	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 		  	var inParam=
 		  		"{\"appName\":\"\",\"beanName\":\"cmdVerify\",\"msg\":\""+document.getElementById("cmdInput").value+"\"}";
 		  	console.log(inParam);
-				xmlhttp.send(inParam);
-			}
+			xmlhttp.send(inParam);
+		}
 
-			cmdTxtVerify.onclick = function(){
-				document.getElementById("cmdPrompt").value="";
-				document.getElementById("cmdResult").value="";
-				document.getElementById("cmdError").value="";
-				clearInterval( cmdTimer );
-				var xmlhttp=null;
-				xmlhttp=new XMLHttpRequest();
+		cmdTxtVerify.onclick = function(){
+			document.getElementById("cmdPrompt").value="";
+			document.getElementById("cmdResult").value="";
+			document.getElementById("cmdError").value="";
+			clearInterval( cmdTimer );
+			var xmlhttp=null;
+			xmlhttp=new XMLHttpRequest();
 			xmlhttp.onload = function(e) {};
 			xmlhttp.ontimeout = function(e) {};
 			xmlhttp.onerror = function(e) {};
 			//xmlhttp.upload.onprogress = function(e) {};
 			xmlhttp.onreadystatechange = function(e) {
-					if(this.status == 200||this.status == 304){
-						document.getElementById("cmdResult").value=getMsgResult(this.responseText);
-					}
-				};
-				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
-				xmlhttp.open("POST",url,true);
+				if(this.status == 200||this.status == 304){
+					document.getElementById("cmdResult").value=getMsgResult(this.responseText);
+				}
+			};
+			xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
+			xmlhttp.open("POST",url,true);
 		  	xmlhttp.timeout = 500000;
 		  	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 		  	var inParam=
 		  		"{\"appName\":\"\",\"beanName\":\"cmdTxtVerify\",\"msg\":\""+document.getElementById("cmdInput").value+"\"}";
 		  	console.log(inParam);
-				xmlhttp.send(inParam);
-			}
+			xmlhttp.send(inParam);
+		}
 
-			cmdFreeSensor.onclick = function(){
-				cmdFreeSensor.disabled=true;
-				cmdEnroll.disabled=true;
-				cmdIdentify.disabled=true;
-				cmdVerify.disabled=true;
-				cmdTxtVerify.disabled=true;
-				cmdCollection.disabled=true;
-				cmdDel.disabled=true;
-				
-				document.getElementById("cmdPrompt").value="";
-				document.getElementById("cmdResult").value="";
-				document.getElementById("cmdError").value="";
-				document.getElementById("infFingerprintSensor").value = "";
-				clearInterval( cmdTimer );
-				var xmlhttp=null;
-				xmlhttp=new XMLHttpRequest();
+		cmdFreeSensor.onclick = function(){
+			cmdFreeSensor.disabled=true;
+			cmdEnroll.disabled=true;
+			cmdIdentify.disabled=true;
+			cmdVerify.disabled=true;
+			cmdTxtVerify.disabled=true;
+			cmdCollection.disabled=true;
+			cmdDel.disabled=true;
+			
+			document.getElementById("cmdPrompt").value="";
+			document.getElementById("cmdResult").value="";
+			document.getElementById("cmdError").value="";
+			document.getElementById("infFingerprintSensor").value = "";
+			clearInterval( cmdTimer );
+			var xmlhttp=null;
+			xmlhttp=new XMLHttpRequest();
 			xmlhttp.onload = function(e) {};
 			xmlhttp.ontimeout = function(e) {};
 			xmlhttp.onerror = function(e) {};
 			//xmlhttp.upload.onprogress = function(e) {};
 			xmlhttp.onreadystatechange = function(e) {
-					if(this.status == 200||this.status == 304){
-						document.getElementById("cmdResult").value=getMsgResult(this.responseText);
-					}
-				};
-				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
-				xmlhttp.open("POST",url,true);
+				if(this.status == 200||this.status == 304){
+					document.getElementById("cmdResult").value=getMsgResult(this.responseText);
+				}
+			};
+			xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
+			xmlhttp.open("POST",url,true);
 		  	xmlhttp.timeout = 500000;
 		  	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-				xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdFreeSensor\",\"msg\":\"\"}");
-			}
-			cmdDel.onclick = function(){
-				cmdEnroll.disabled=true;
-				cmdIdentify.disabled=true;
-				cmdVerify.disabled=true;
-				cmdTxtVerify.disabled=true;
-				cmdCollection.disabled=true;
-				cmdDel.disabled=true;
+			xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdFreeSensor\",\"msg\":\"\"}");
+		}
+		
+		cmdDel.onclick = function(){
+			var cmdFinshed =false;
+			cmdEnroll.disabled=true;
+			cmdIdentify.disabled=true;
+			cmdVerify.disabled=true;
+			cmdTxtVerify.disabled=true;
+			cmdCollection.disabled=true;
+			cmdDel.disabled=true;
+			document.getElementById("cmdPrompt").value="";
+			document.getElementById("cmdResult").value="";
+			document.getElementById("cmdError").value="";
+
+			clearInterval( cmdTimer );
+				
+			var xmlhttp=null;
+			xmlhttp=new XMLHttpRequest();
+			xmlhttp.onload = function(e) {};
+			xmlhttp.ontimeout = function(e) {};
+			xmlhttp.onerror = function(e) {};
+			//xmlhttp.upload.onprogress = function(e) {};
+			xmlhttp.onreadystatechange = function(e) {
+				if(this.status != 200 && this.status != 304){
+					return;
+				}
+				if(this.responseText==null || this.responseText==""){
+					return;
+				}
+	    		document.getElementById("cmdResult").value=getResponseCode(this.responseText);
+		    	if(getResponseCode(this.responseText)!="FPU0100000000"){
+	    			cmdEnroll.disabled=false;
+	    			cmdIdentify.disabled=false;
+	    			cmdVerify.disabled=false;
+	    			cmdTxtVerify.disabled=false;
+	    			cmdCollection.disabled=false;
+	    			cmdDel.disabled=false;
+	    			cmdFinshed = true;
+	    			return;
+		    	}
 				document.getElementById("cmdPrompt").value="请按手指!";
 				document.getElementById("cmdResult").value="";
 				document.getElementById("cmdError").value="";
-				clearInterval( cmdTimer );
-				var xmlhttp=null;
-				xmlhttp=new XMLHttpRequest();
-			xmlhttp.onload = function(e) {};
-			xmlhttp.ontimeout = function(e) {};
-			xmlhttp.onerror = function(e) {};
-			//xmlhttp.upload.onprogress = function(e) {};
-			xmlhttp.onreadystatechange = function(e) {
-					if(this.status == 200||this.status == 304){
-					}
-				};
-				xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
-				xmlhttp.open("POST",url,true);
-		  	xmlhttp.timeout = 500000;
-		  	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-				xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdDel\",\"msg\":\""+document.getElementById("cmdInput").value+"\"}");
-
    				cmdTimer = setInterval( function(){
-			  httpGetCmdPrompt=new XMLHttpRequest();
-    			httpGetCmdPrompt.onload = function(e) {};
-    			httpGetCmdPrompt.ontimeout = function(e) {};
-    			httpGetCmdPrompt.onerror = function(e) {};
-    			//httpGetCmdPrompt.upload.onprogress = function(e) {};
-    			httpGetCmdPrompt.onreadystatechange = function(e) {
-    					if(this.status == 200||this.status == 304){
-    						document.getElementById("cmdPrompt").value=getMsgResult(this.responseText);
-							if(this.responseText.indexOf("Del suc")>=0  || this.responseText.indexOf("Identify fail")>=0 ){
-								//clearInterval( cmdTimer );
+					httpGetCmdPrompt=new XMLHttpRequest();
+   	    			httpGetCmdPrompt.onload = function(e) {};
+   	    			httpGetCmdPrompt.ontimeout = function(e) {};
+   	    			httpGetCmdPrompt.onerror = function(e) {};
+   	    			//httpGetCmdPrompt.upload.onprogress = function(e) {};
+   	    			httpGetCmdPrompt.onreadystatechange = function(e) {
+   	    				if(this.status != 200 && this.status != 304 ){
+   	    					return;
+   	    				}
+   	    				if(this.responseText==null || this.responseText==""){
+   	    					return;
+   	    				}
+   	    				document.getElementById("cmdPrompt").value="请按手指!("+getMsgResult(this.responseText)+")";
+   						if(this.responseText.indexOf("Del suc") <0 ){
+   							return;
+   						}
+   						clearInterval( cmdTimer );
+   						cmdFinshed = true;
+    					var httpGetCurrentOwner=null;
+   								httpGetCurrentOwner=new XMLHttpRequest();
+   								httpGetCurrentOwner.onload = function(e) {};
+   								httpGetCurrentOwner.ontimeout = function(e) {};
+   								httpGetCurrentOwner.onerror = function(e) {};
+   								//httpGetCurrentOwner.upload.onprogress = function(e) {};
+   						httpGetCurrentOwner.onreadystatechange = function(e) {
+							if(this.status != 200 && this.status != 304){
+								return;
 							}
-							if(this.responseText.indexOf("Del suc") >=0 ){
-								clearInterval( cmdTimer );
-								var xmlhttp=null;
-								xmlhttp=new XMLHttpRequest();
-							xmlhttp.onload = function(e) {};
-							xmlhttp.ontimeout = function(e) {};
-							xmlhttp.onerror = function(e) {};
-							//xmlhttp.upload.onprogress = function(e) {};
-							xmlhttp.onreadystatechange = function(e) {
-									if(this.status == 200||this.status == 304){
-										document.getElementById("cmdResult").value=getMsgResult(this.responseText);
-										cmdEnroll.disabled=false;
-										cmdIdentify.disabled=false;
-										cmdVerify.disabled=false;
-										cmdTxtVerify.disabled=false;
-										cmdCollection.disabled=false;
-										cmdDel.disabled=false;
-									}
-								};
-								xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
-								xmlhttp.open("POST",url,true);
-						  	xmlhttp.timeout = 500000;
-						  	xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-								xmlhttp.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwner\",\"msg\":\"\"}");
+							if(this.responseText==null || this.responseText==""){
+								return;
 							}
-    					}
-    				};
-    				httpGetCmdPrompt.onerror = function(e) { document.getElementById("cmdError").value=e; };
-    				httpGetCmdPrompt.open("POST",url,true);
-    		  	httpGetCmdPrompt.timeout = 500000;
-    		  	httpGetCmdPrompt.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-    				httpGetCmdPrompt.send("{\"appName\":\"\",\"beanName\":\"getCmdPrompt\",\"msg\":\"\"}");
-		   	}, 1000 );
-			}
-
-	  }
-	  </script>
+							if(getMsgResult(this.responseText)!=null && getMsgResult(this.responseText)!=""){
+								document.getElementById("cmdResult").value=getMsgResult(this.responseText);
+	   							document.getElementById("cmdPrompt").value="";
+							}
+							cmdEnroll.disabled=false;
+							cmdIdentify.disabled=false;
+							cmdVerify.disabled=false;
+							cmdTxtVerify.disabled=false;
+							cmdCollection.disabled=false;
+							cmdDel.disabled=false;
+						};
+						httpGetCurrentOwner.onerror = function(e) { document.getElementById("cmdError").value=e; };
+						httpGetCurrentOwner.open("POST",url,true);
+					  	httpGetCurrentOwner.timeout = 500000;
+					  	httpGetCurrentOwner.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+						httpGetCurrentOwner.send("{\"appName\":\"\",\"beanName\":\"getCurrentOwner\",\"msg\":\"\"}");
+   	    			};
+	   				httpGetCmdPrompt.onerror = function(e) { document.getElementById("cmdError").value=e; };
+	   				httpGetCmdPrompt.open("POST",url,true);
+	   		  		httpGetCmdPrompt.timeout = 500000;
+	   		  		httpGetCmdPrompt.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+	   		  		if(!cmdFinshed){
+	   					httpGetCmdPrompt.send("{\"appName\":\"\",\"beanName\":\"getCmdPrompt\",\"msg\":\"\"}");
+	   		  		}
+		   		}, 1000 );
+			};
+			xmlhttp.onerror = function(e) { document.getElementById("cmdError").value=e; };
+			xmlhttp.open("POST",url,true);
+	  		xmlhttp.timeout = 500000;
+	  		xmlhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+			xmlhttp.send("{\"appName\":\"\",\"beanName\":\"cmdDel\",\"msg\":\""+document.getElementById("cmdInput").value+"\"}");
+		}
+	}
+</script>
 </head>
 <body>
 	<input id="cmdEnroll" type="button" style="widh: 8px; height: 20px"

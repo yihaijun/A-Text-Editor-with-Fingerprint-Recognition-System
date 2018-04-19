@@ -502,6 +502,11 @@ public class FingerprintSensorHandle {
 			lockEvent.setEvent();
 			return STATE_DEVICE_BUSY;
 		}
+		ret = load(true);
+		if (ret != 0) {
+			enrollState = ret;
+			return ret;
+		}
 		enrollState = STATE_NO_CMD;
 		enroll_idx = 0;
 		currentOwner = "";
@@ -538,6 +543,11 @@ public class FingerprintSensorHandle {
 		if (ret != 0) {
 			lockEvent.setEvent();
 			return STATE_DEVICE_BUSY;
+		}
+		ret = load(true);
+		if (ret != 0) {
+			enrollState = ret;
+			return ret;
 		}
 		if (owner.startsWith(speciFidPreKey)) {
 			int index = 0;
@@ -1043,7 +1053,7 @@ public class FingerprintSensorHandle {
 							sizeFPTemp[0]);
 		} else {
 			fpTemplateString = "TissonAFIS:" + 0 + ":"
-					+ vo.getFpTemplate().serialize();
+					+ ZipUtils.gzip(vo.getFpTemplate().serialize());
 		}
 		return identifyText(fpTemplateString) + "(total Time-consuming "
 				+ (System.currentTimeMillis() - beginTime) + " ms)";
@@ -1100,7 +1110,6 @@ public class FingerprintSensorHandle {
 		if (thPoolSize <= 2
 				&& findVo.getType() == FingerprintTypeEnum.ZKLIB.getCode()) {
 			int ret = 0;
-			int pos = fid[0];
 			TreeMap<String, FingerprintVo> result = new TreeMap<String, FingerprintVo>();
 			
 			int count = 0;
@@ -1131,7 +1140,7 @@ public class FingerprintSensorHandle {
 			cmdPrompt = "";
 			StringBuffer outBuf = new StringBuffer();
 			outBuf.delete(0, outBuf.length());
-			java.util.Iterator<String> it = result.keySet().iterator();
+			java.util.Iterator<String> it = result.descendingKeySet().iterator();
 			while (it.hasNext()) {
 				String key = it.next();
 				// String[] keyVaueArry=key.split("_");
@@ -1209,7 +1218,7 @@ public class FingerprintSensorHandle {
 		// vo = getFingerprintVo(j);
 		// outBuf.append(vo.getOwner()+ "=" + score[0] + ";");
 		// }
-		Hashtable<String, FingerprintVo> resultAll = new Hashtable<String, FingerprintVo>();
+		TreeMap<String, FingerprintVo> resultAll = new TreeMap<String, FingerprintVo>();
 		for (int tmpIndex = 0; tmpIndex < matchTask.length; tmpIndex++) {
 			if (result[tmpIndex] == null) {
 				continue;
@@ -1217,7 +1226,7 @@ public class FingerprintSensorHandle {
 			resultAll.putAll(result[tmpIndex]);
 		}
 
-		java.util.Iterator<String> it = resultAll.keySet().iterator();
+		java.util.Iterator<String> it = resultAll.descendingKeySet().iterator();
 		while (it.hasNext()) {
 			String key = it.next();
 			// String[] keyVaueArry=key.split("_");
@@ -1807,8 +1816,8 @@ public class FingerprintSensorHandle {
 						// break;
 						// }
 						// }
-						if (fid[0] < fingerprintDbArry.size()) {
-							currentOwner = fingerprintDbArry.get(fid[0])
+						if (fid[0] <= fingerprintDbArry.size()) {
+							currentOwner = fingerprintDbArry.get(fid[0]-1)
 									.getOwner();
 						}
 						if (bDel) {
