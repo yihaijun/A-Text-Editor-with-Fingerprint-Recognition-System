@@ -8,10 +8,11 @@
 	<dubbo:module name="module-${tisson-sfip-app-FingerprintSensorTool.dubbo.application.name}" />
 	<dubbo:registry address="${tisson-sfip-app-FingerprintSensorTool.registry.address}"  check="false" />
 	
-	<dubbo:protocol name="dubbo" port="${tisson-sfip-app-FingerprintSensorTool.protocol.port}" threads="5"/>
+	<dubbo:protocol name="dubbo" threadpool="cached" corethreads="1" queues="0" threads="50"
+					port="${tisson-sfip-app-FingerprintSensorTool.protocol.port}"  />
 	<!--dubbo:monitor protocol="registry"/-->
 
-    <dubbo:protocol name="rest" threadpool="cached" corethreads="1" queues="0" threads="5" keepalivetime="120000"
+    <dubbo:protocol name="rest" threadpool="cached" corethreads="1" queues="0" threads="50" keepalivetime="120000"
                     port="${tisson-sfip-app-FingerprintSensorTool.protocol.rest.port}" 
                     contextpath="services" accepts="500" 
                     extension="com.tisson.fingerprint.FingerprintSensorTool.sfipappsample.RestControllFilter,com.alibaba.dubbo.rpc.protocol.rest.support.LoggingFilter"/>

@@ -75,6 +75,7 @@ public class FingerprintSensorHandle {
 	private int thPoolSize = 2;
 	private int thRunSize = (thPoolSize * 50 / 100);
 	private NmaCollectorThreadPool thPool;
+	private RtsEvent lockThPoolEvent;
 	private int loadDbCycleTimes = 0;
 
 	private boolean haveStopped = true;
@@ -151,6 +152,7 @@ public class FingerprintSensorHandle {
 		workThread = new WorkThread();
 		workThread.start();// 线程启动
 
+		lockThPoolEvent = new RtsEvent();
 		try {
 			thPoolSize = Integer.parseInt(System.getProperties().getProperty(
 					"thPoolSizeFingerprintSensorHandle"));
@@ -1086,13 +1088,15 @@ public class FingerprintSensorHandle {
 		int[] score = new int[10];
 		// ret = FingerprintSensorEx.DBIdentify(mhDevice, fpTemplate, fid,
 		// score);
-		if (findVo.getType() == FingerprintTypeEnum.ZKLIB.getCode()
-				&& mhDevice > 0) {
+		if (findVo.getType() == FingerprintTypeEnum.ZKLIB.getCode()) {
 			if (log.isDebugEnabled()) {
 				log.debug("DBIdentify begin...");
 			}
-			if (findVo.getFpTemplateByteArry() == null) {
+			if (findVo.getFpTemplateByteArry() == null ) {
 				return "Fingerprint Template ByteArry is null.";
+			}
+			if ( mhDevice <= 0) {
+				return "ZKTeco FingerprintSensor mhDevice("+ mhDevice +") <= 0";
 			}
 			int ret = 0;
 			ret = ZKFPService.IdentifyFP(findVo.getFpTemplateByteArry(), fid,
@@ -1155,7 +1159,13 @@ public class FingerprintSensorHandle {
 			return outBuf.toString();
 		}
 
+		int lockThPoolEventWait = lockThPoolEvent.waitEvent(200000);
+		if (lockThPoolEventWait != 0) {
+			log.warn("lockThPoolEvent.waitEvent(200000)=" + lockThPoolEventWait + "!=0");
+		}
 		thPool.fetchTask();
+		lockThPoolEvent.setEvent();
+		lockEvent.setEvent();
 		// long beginTime = System.currentTimeMillis();
 		TreeMap<String, FingerprintVo>[] result = new TreeMap[thRunSize];
 		int beginPos = 1;// fid[0];
@@ -1163,10 +1173,10 @@ public class FingerprintSensorHandle {
 		if (step < 1) {
 			step = 1;
 		}
-		int endPos = Math.min(iFid-1,beginPos + step);
+		int endPos = beginPos + step;
 		FPMatchTask[] matchTask = new FPMatchTask[thRunSize];
 		int thIndex = 0;
-		for (; endPos < iFid && thIndex < matchTask.length; thIndex++) {
+		for (; beginPos < iFid && thIndex < matchTask.length; thIndex++) {
 			if (log.isDebugEnabled()) {
 				log.debug("thIndex="+thIndex+",beginPos=" + beginPos + ",endPos=" + endPos
 						+ ",matchTask.length=" + matchTask.length + ",iFid=" + iFid);
@@ -1174,7 +1184,12 @@ public class FingerprintSensorHandle {
 			result[thIndex] = new TreeMap<String, FingerprintVo>();
 			matchTask[thIndex] = new FPMatchTask(findVo, minThresholdScore,
 					result[thIndex], beginPos, endPos);
+			lockThPoolEventWait = lockThPoolEvent.waitEvent(200000);
+			if (lockThPoolEventWait != 0) {
+				log.warn("lockThPoolEvent.waitEvent(200000)=" + lockThPoolEventWait + "!=0");
+			}
 			thPool.submit(matchTask[thIndex].getName(), matchTask[thIndex], 0);
+			lockThPoolEvent.setEvent();
 			beginPos = endPos + 1;
 			endPos = beginPos + step;
 		}

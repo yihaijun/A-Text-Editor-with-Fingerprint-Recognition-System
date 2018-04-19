@@ -10,7 +10,7 @@
         http://code.alibabatech.com/schema/dubbo
         http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
 
-	<bean id="sfipApiTestServiceParamDef"
+	<bean id="tisson-sfip-app-FingerprintSensorToolDef"
 		class="com.tisson.sfip.module.util.serviceapitest.SfipModuleServiceParamDef"
 		init-method="appendSystemServiceParamDef"
  		scope="singleton">
@@ -18,6 +18,9 @@
 			<map>
 				<entry key="hellWordBeanSfip.helloWord.request" value="com.tisson.sfip.api.message.request.HelloWordRequest" />
 				<entry key="hellWordBeanSfip.helloWord.response" value="com.tisson.sfip.api.message.response.HelloWordResponse" />
+
+				<entry key="fingerprintUtilsImpl.helloWord.request" value="com.tisson.sfip.api.message.request.HelloWordRequest" />
+				<entry key="fingerprintUtilsImpl.helloWord.response" value="com.tisson.sfip.api.message.response.HelloWordResponse" />
 			</map>
 		</property>
 	</bean>

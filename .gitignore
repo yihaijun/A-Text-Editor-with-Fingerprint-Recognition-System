@@ -20,3 +20,4 @@ bin
 /FingerprintRecognitionDemo/libsilkid.dll
 /FingerprintRecognitionDemo/libusb0.dll
 /FingerprintRecognitionDemo/src/fpengine.dll
+/sfip-oam.log

@@ -57,6 +57,11 @@ public class HellWordBeanImplTest  implements ApplicationContextAware {
 			e1.printStackTrace();
 		}
 		try {
+			test("src/test/resources/testUseCases/fingerprintUtilsImpl-helloWord-1-FPU0100000000.txt");
+		} catch (Throwable e1) {
+			e1.printStackTrace();
+		}		
+		try {
 			Thread.currentThread().sleep(1000L*1000L);
 		} catch (Throwable e) {
 			e.printStackTrace();
