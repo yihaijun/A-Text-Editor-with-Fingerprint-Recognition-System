@@ -172,11 +172,11 @@ public class TissonAFIS {
 			txtFile.createNewFile();
 			FileOutputStream fs = new FileOutputStream(txtFile, true); // 在该文件的末尾添加内容
 			String jsonTemplateEx = "TissonAFIS:" + 0 + ":" + jsonTemplate;
-			String jsonTemplateZip = ZipUtils.gzip(jsonTemplate);
+			String jsonTemplateZip = com.tisson.sfip.module.util.StringUtil.gzip(jsonTemplate);
 			jsonTemplateZip = jsonTemplateZip.replaceAll("\r", "");
 			jsonTemplateZip = jsonTemplateZip.replaceAll("\n", "");
 			String jsonTemplateUnZip = "TissonAFIS:" + 0 + ":"
-					+ ZipUtils.gunzip(jsonTemplateZip);
+					+ com.tisson.sfip.module.util.StringUtil.gunzip(jsonTemplateZip);
 			if (jsonTemplateZip == null) {
 				jsonTemplateZip = "";
 			}
@@ -208,7 +208,7 @@ public class TissonAFIS {
 			return -1;
 		}
 		try {
-			vo.setFpTemplate(new FingerprintTemplate().deserialize(ZipUtils
+			vo.setFpTemplate(new FingerprintTemplate().deserialize(com.tisson.sfip.module.util.StringUtil
 					.gunzip(jsonTemplate)));
 
 			vo.setType(FingerprintTypeEnum.TissonAFIS.getCode());
@@ -252,7 +252,7 @@ public class TissonAFIS {
 		FingerprintTemplate select = fingerprintTemplateArry[maxGenerality];
 
 		String jsonTemplate = select.serialize();
-		String jsonTemplateZip = ZipUtils.gzip(jsonTemplate);
+		String jsonTemplateZip = com.tisson.sfip.module.util.StringUtil.gzip(jsonTemplate);
 		zipJsonTemplate = "TissonAFIS:" + 0 + ":" + jsonTemplateZip;
 		return zipJsonTemplate;
 	}

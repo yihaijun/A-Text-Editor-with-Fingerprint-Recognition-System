@@ -20,6 +20,11 @@ p {
 	var needDevice = "true";
 	var visitor= "guest";
 
+	function runcmd() { 
+		WSH=new ActiveXObject("WScript.Shell"); 
+		WSH.run("cmd.exe /k start c:\\zkfptest\\test.bat"); 
+	} 
+	
 	function GetQueryString(name){
 		var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
 		var r = window.location.search.substr(1).match(reg);

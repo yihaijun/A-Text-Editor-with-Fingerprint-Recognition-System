@@ -172,6 +172,7 @@ public class FingerprintUtilsImpl implements FingerprintUtilsInf{
 	public void onExit() {
 		FingerprintSensorHandle.getInstance().FreeSensor();
 		FingerprintSensorHandle.getInstance().stop();
+		FingerprintSensorHandle.getInstance().destroy();
 	}
 
     @GET

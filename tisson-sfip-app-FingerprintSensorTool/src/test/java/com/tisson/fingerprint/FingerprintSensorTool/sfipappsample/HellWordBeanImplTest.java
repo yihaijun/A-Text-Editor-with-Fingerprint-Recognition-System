@@ -13,12 +13,12 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.tisson.fingerprint.FingerprintSensorTool.RtsEvent;
 import com.tisson.sfip.module.reboot.SfipContainerWrapper;
 import com.tisson.sfip.module.util.serviceapitest.LoadTestUseCasesArray;
 import com.tisson.sfip.module.util.serviceapitest.SfipServiceResponseSample;
 import com.tisson.sfip.module.util.serviceapitest.TestResult;
 import com.tisson.sfip.module.util.serviceapitest.TestUseCases;
+import com.tisson.sfip.module.util.thread.RtsEvent;
 
 @Slf4j
 @RunWith(SpringJUnit4ClassRunner.class)

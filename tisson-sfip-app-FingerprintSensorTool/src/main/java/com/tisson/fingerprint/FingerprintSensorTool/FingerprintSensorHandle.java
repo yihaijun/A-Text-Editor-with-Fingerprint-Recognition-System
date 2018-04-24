@@ -5,30 +5,27 @@ package com.tisson.fingerprint.FingerprintSensorTool;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Hashtable;
 import java.util.TreeMap;
+import java.util.concurrent.Future;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.machinezoo.sourceafis.FingerprintTemplate;
+import com.regaltec.ccatstep.common.RtsBase64;
+import com.tisson.sfip.module.util.SystemUtil;
+import com.tisson.sfip.module.util.thread.RtsEvent;
+import com.tisson.sfip.module.util.thread.SfipCallable;
+import com.tisson.sfip.module.util.thread.SfipThreadPool;
 import com.zkteco.biometric.FingerprintSensor;
 import com.zkteco.biometric.FingerprintSensorErrorCode;
 import com.zkteco.biometric.FingerprintSensorEx;
 import com.zkteco.biometric.ZKFPService;
-import com.machinezoo.sourceafis.FingerprintTemplate;
-import com.regaltec.ccatstep.common.RtsBase64;
-import com.regaltec.nma.collector.common.thread.INmaCollectorTaskInf;
-import com.regaltec.nma.collector.common.thread.NmaCollectorThreadPool;
-import com.sun.jna.Library;
-import com.sun.jna.Native;
-import com.tisson.sfip.module.util.SystemUtil;
 
 /**
  * @author yihaijun
@@ -74,8 +71,8 @@ public class FingerprintSensorHandle {
 
 	private int thPoolSize = 2;
 	private int thRunSize = (thPoolSize * 50 / 100);
-	private NmaCollectorThreadPool thPool;
-	private RtsEvent lockThPoolEvent;
+	private SfipThreadPool thPool;
+
 	private int loadDbCycleTimes = 0;
 
 	private boolean haveStopped = true;
@@ -152,7 +149,6 @@ public class FingerprintSensorHandle {
 		workThread = new WorkThread();
 		workThread.start();// 线程启动
 
-		lockThPoolEvent = new RtsEvent();
 		try {
 			thPoolSize = Integer.parseInt(System.getProperties().getProperty(
 					"thPoolSizeFingerprintSensorHandle"));
@@ -177,7 +173,7 @@ public class FingerprintSensorHandle {
 			// e.printStackTrace();
 		}
 
-		thPool = new NmaCollectorThreadPool(thPoolSize);
+		thPool = new SfipThreadPool(thRunSize, thPoolSize, 0, 600000L);
 	}
 
 	/**
@@ -322,9 +318,9 @@ public class FingerprintSensorHandle {
 		if (log.isDebugEnabled()) {
 			log.debug("bCollection=" + bCollection);
 		}
-		
+
 		testFGT();
-		
+
 		long duration_1 = System.currentTimeMillis() - beginTime;
 		long duration_2 = System.currentTimeMillis() - beginTime - duration_1;
 		long duration_3 = System.currentTimeMillis() - beginTime - duration_2;
@@ -714,7 +710,7 @@ public class FingerprintSensorHandle {
 	}
 
 	private boolean loadTestISOBase64(boolean printlog) {
-//	fingerprint-00001-ISO-19794-2-base64
+		// fingerprint-00001-ISO-19794-2-base64
 		String rootPath = "../external/fingerprint/collect-base64";
 		File fileSet = new File(rootPath);
 		File[] files = null;
@@ -737,60 +733,69 @@ public class FingerprintSensorHandle {
 				continue;
 			}
 			String base64 = readFileByChars(path);
-			FingerprintVo vo = new  FingerprintVo();
+			FingerprintVo vo = new FingerprintVo();
 			vo.setOwner(getOwnerByPath(path, 0));
-			
-			byte[] iso =RtsBase64.decode(base64);
-			if(iso==null){
+
+			byte[] iso = RtsBase64.decode(base64);
+			if (iso == null) {
 				continue;
 			}
-			String jsonTemplate=null;
+			String jsonTemplate = null;
 			try {
-				jsonTemplate = new FingerprintTemplate().convert(iso).serialize();
+				jsonTemplate = new FingerprintTemplate().convert(iso)
+						.serialize();
 			} catch (Throwable t) {
-				log.warn(t.toString()+"(iso.length="+iso.length+")",t);
+				log.warn(t.toString() + "(iso.length=" + iso.length + ")", t);
 			}
-			if(jsonTemplate==null||jsonTemplate.trim().equals("")){
+			if (jsonTemplate == null || jsonTemplate.trim().equals("")) {
 				continue;
 			}
-			
-			String txtFilePath = ".."+fileSeparator+"external"+fileSeparator+"fingerprint"+fileSeparator+"TissonAFIS"+fileSeparator+"fingerprint-"
-			+ vo.getOwner() 
-//			+ "-"
-//			+ new SimpleDateFormat("yyyyMMdd-HHmmss-SSS")
-//					.format(new Date())
-			+ "-ISO-19794-2.txt";
+
+			String txtFilePath = ".." + fileSeparator + "external"
+					+ fileSeparator + "fingerprint" + fileSeparator
+					+ "TissonAFIS" + fileSeparator + "fingerprint-"
+					+ vo.getOwner()
+					// + "-"
+					// + new SimpleDateFormat("yyyyMMdd-HHmmss-SSS")
+					// .format(new Date())
+					+ "-ISO-19794-2.txt";
 			try {
 				File txtFile = new File(txtFilePath);
 				if (txtFile.exists()) {
 					txtFile.delete();
 				}
 				txtFile.createNewFile();
-				FileOutputStream fs = new FileOutputStream(txtFile,
-						true); // 在该文件的末尾添加内容
-				String jsonTemplateEx = "TissonAFIS:"+0+":"+jsonTemplate;
-				String jsonTemplateZip = ZipUtils.gzip(jsonTemplate);
+				FileOutputStream fs = new FileOutputStream(txtFile, true); // 在该文件的末尾添加内容
+				String jsonTemplateEx = "TissonAFIS:" + 0 + ":" + jsonTemplate;
+				String jsonTemplateZip = com.tisson.sfip.module.util.StringUtil
+						.gzip(jsonTemplate);
 				jsonTemplateZip = jsonTemplateZip.replaceAll("\r", "");
 				jsonTemplateZip = jsonTemplateZip.replaceAll("\n", "");
-				String jsonTemplateUnzip = "TissonAFIS:"+0+":"+ZipUtils.gunzip(jsonTemplateZip);
-				if(jsonTemplateZip==null){
-					jsonTemplateZip="";
+				String jsonTemplateUnzip = "TissonAFIS:"
+						+ 0
+						+ ":"
+						+ com.tisson.sfip.module.util.StringUtil
+								.gunzip(jsonTemplateZip);
+				if (jsonTemplateZip == null) {
+					jsonTemplateZip = "";
 				}
-				if(jsonTemplateUnzip==null){
-					jsonTemplateUnzip="";
+				if (jsonTemplateUnzip == null) {
+					jsonTemplateUnzip = "";
 				}
 				boolean equal = jsonTemplateUnzip.equals(jsonTemplateEx);
-				
-				log.debug("jsonTemplate.length()="+jsonTemplate.length()+",jsonTemplateZip.length()="+jsonTemplateZip.length()+",equal="+equal);
-				
-				fs.write(("TissonAFIS:"+0+":"+jsonTemplateZip).getBytes());
-				
+
+				log.debug("jsonTemplate.length()=" + jsonTemplate.length()
+						+ ",jsonTemplateZip.length()="
+						+ jsonTemplateZip.length() + ",equal=" + equal);
+
+				fs.write(("TissonAFIS:" + 0 + ":" + jsonTemplateZip).getBytes());
+
 				fs.close();
 			} catch (Throwable t) {
-				log.warn(t.toString(),t);
+				log.warn(t.toString(), t);
 			}
-			
-			TissonAFIS.load(vo,jsonTemplate);
+
+			TissonAFIS.load(vo, jsonTemplate);
 
 			fingerprintArry.add(vo);
 			fingerprintDbArry.add(iFid - 1, vo);
@@ -798,7 +803,7 @@ public class FingerprintSensorHandle {
 		}
 		return true;
 	}
-	
+
 	private boolean loadTestZKTecoBase64(boolean printlog) {
 		String rootPath = "../external/fingerprint/ZKTeco-collect-base64";
 		File fileSet = new File(rootPath);
@@ -1054,8 +1059,11 @@ public class FingerprintSensorHandle {
 					+ FingerprintSensorEx.BlobToBase64(fpTemplate,
 							sizeFPTemp[0]);
 		} else {
-			fpTemplateString = "TissonAFIS:" + 0 + ":"
-					+ ZipUtils.gzip(vo.getFpTemplate().serialize());
+			fpTemplateString = "TissonAFIS:"
+					+ 0
+					+ ":"
+					+ com.tisson.sfip.module.util.StringUtil.gzip(vo
+							.getFpTemplate().serialize());
 		}
 		return identifyText(fpTemplateString) + "(total Time-consuming "
 				+ (System.currentTimeMillis() - beginTime) + " ms)";
@@ -1092,11 +1100,12 @@ public class FingerprintSensorHandle {
 			if (log.isDebugEnabled()) {
 				log.debug("DBIdentify begin...");
 			}
-			if (findVo.getFpTemplateByteArry() == null ) {
+			if (findVo.getFpTemplateByteArry() == null) {
 				return "Fingerprint Template ByteArry is null.";
 			}
-			if ( mhDevice <= 0) {
-				return "ZKTeco FingerprintSensor mhDevice("+ mhDevice +") <= 0";
+			if (mhDevice <= 0) {
+				return "ZKTeco FingerprintSensor mhDevice(" + mhDevice
+						+ ") <= 0";
 			}
 			int ret = 0;
 			ret = ZKFPService.IdentifyFP(findVo.getFpTemplateByteArry(), fid,
@@ -1115,7 +1124,7 @@ public class FingerprintSensorHandle {
 				&& findVo.getType() == FingerprintTypeEnum.ZKLIB.getCode()) {
 			int ret = 0;
 			TreeMap<String, FingerprintVo> result = new TreeMap<String, FingerprintVo>();
-			
+
 			int count = 0;
 			int[] record = new int[100];
 			while (ret == 0) {
@@ -1123,7 +1132,8 @@ public class FingerprintSensorHandle {
 				if (count <= record.length) {
 					record[count - 1] = fid[0];
 				}
-				result.put(FingerprintVo.getLabelReference(score[0],fid[0]),fingerprintDbArry.get(fid[0] - 1));
+				result.put(FingerprintVo.getLabelReference(score[0], fid[0]),
+						fingerprintDbArry.get(fid[0] - 1));
 				dbDelRet = FingerprintSensorEx.DBDel(mhDB, fid[0]);
 
 				ret = FingerprintSensorEx
@@ -1144,7 +1154,8 @@ public class FingerprintSensorHandle {
 			cmdPrompt = "";
 			StringBuffer outBuf = new StringBuffer();
 			outBuf.delete(0, outBuf.length());
-			java.util.Iterator<String> it = result.descendingKeySet().iterator();
+			java.util.Iterator<String> it = result.descendingKeySet()
+					.iterator();
 			while (it.hasNext()) {
 				String key = it.next();
 				// String[] keyVaueArry=key.split("_");
@@ -1159,12 +1170,6 @@ public class FingerprintSensorHandle {
 			return outBuf.toString();
 		}
 
-		int lockThPoolEventWait = lockThPoolEvent.waitEvent(200000);
-		if (lockThPoolEventWait != 0) {
-			log.warn("lockThPoolEvent.waitEvent(200000)=" + lockThPoolEventWait + "!=0");
-		}
-		thPool.fetchTask();
-		lockThPoolEvent.setEvent();
 		lockEvent.setEvent();
 		// long beginTime = System.currentTimeMillis();
 		TreeMap<String, FingerprintVo>[] result = new TreeMap[thRunSize];
@@ -1175,21 +1180,22 @@ public class FingerprintSensorHandle {
 		}
 		int endPos = beginPos + step;
 		FPMatchTask[] matchTask = new FPMatchTask[thRunSize];
+		Future<TreeMap>[] matchTaskFuture = new Future[thRunSize];
 		int thIndex = 0;
 		for (; beginPos < iFid && thIndex < matchTask.length; thIndex++) {
 			if (log.isDebugEnabled()) {
-				log.debug("thIndex="+thIndex+",beginPos=" + beginPos + ",endPos=" + endPos
-						+ ",matchTask.length=" + matchTask.length + ",iFid=" + iFid);
+				log.debug("thIndex=" + thIndex + ",beginPos=" + beginPos
+						+ ",endPos=" + endPos + ",matchTask.length="
+						+ matchTask.length + ",iFid=" + iFid);
 			}
 			result[thIndex] = new TreeMap<String, FingerprintVo>();
 			matchTask[thIndex] = new FPMatchTask(findVo, minThresholdScore,
 					result[thIndex], beginPos, endPos);
-			lockThPoolEventWait = lockThPoolEvent.waitEvent(200000);
-			if (lockThPoolEventWait != 0) {
-				log.warn("lockThPoolEvent.waitEvent(200000)=" + lockThPoolEventWait + "!=0");
+			matchTaskFuture[thIndex] = thPool.submit(matchTask[thIndex], -1);
+			if (matchTaskFuture[thIndex] == null) {
+				log.warn("thPool.submit(" + matchTask[thIndex].getName()
+						+ ") failed.");
 			}
-			thPool.submit(matchTask[thIndex].getName(), matchTask[thIndex], 0);
-			lockThPoolEvent.setEvent();
 			beginPos = endPos + 1;
 			endPos = beginPos + step;
 		}
@@ -1205,14 +1211,14 @@ public class FingerprintSensorHandle {
 				if (matchTask[tmpIndex] == null) {
 					continue;
 				}
-				if (!thPool.isDoneTask(matchTask[tmpIndex].getName())) {
+				if (!matchTaskFuture[tmpIndex].isDone()) {
 					thIndex = tmpIndex;
+					try {
+						Thread.sleep(200);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 					break;
-				}
-				try {
-					Thread.sleep(200);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
 				}
 			}
 		}
@@ -1235,10 +1241,21 @@ public class FingerprintSensorHandle {
 		// }
 		TreeMap<String, FingerprintVo> resultAll = new TreeMap<String, FingerprintVo>();
 		for (int tmpIndex = 0; tmpIndex < matchTask.length; tmpIndex++) {
-			if (result[tmpIndex] == null) {
+			// if (result[tmpIndex] == null) {
+			// continue;
+			// }
+			// resultAll.putAll(result[tmpIndex]);
+			if (matchTaskFuture[tmpIndex] == null) {
 				continue;
 			}
-			resultAll.putAll(result[tmpIndex]);
+			try {
+				TreeMap treeMap = matchTaskFuture[tmpIndex].get();
+				if (treeMap != null && treeMap.size() > 0) {
+					resultAll.putAll(treeMap);
+				}
+			} catch (Throwable t) {
+				log.warn("resultAll.putAll(matchTaskFuture["+tmpIndex+"]) Throwable:", t);
+			}
 		}
 
 		java.util.Iterator<String> it = resultAll.descendingKeySet().iterator();
@@ -1319,7 +1336,8 @@ public class FingerprintSensorHandle {
 			iFid = java.lang.Math.max(iFid,
 					FingerprintSensorEx.DBCount(mhDevice) + 1);
 			int ret3 = 0;
-			if (vo.getType() == FingerprintTypeEnum.ZKLIB.getCode() && vo.getFpTemplateByteArry() != null) {
+			if (vo.getType() == FingerprintTypeEnum.ZKLIB.getCode()
+					&& vo.getFpTemplateByteArry() != null) {
 				ret3 = FingerprintSensorEx.DBAdd(mhDevice, iFid,
 						vo.getFpTemplateByteArry());
 			}
@@ -1331,7 +1349,8 @@ public class FingerprintSensorHandle {
 					fingerprintDbArry.add(iFid - 1, vo);
 					iFid++;
 				} else {
-					log.warn("ZKTeco FingerprintSensor FingerprintSensorEx.DBCount return "+ret3);
+					log.warn("ZKTeco FingerprintSensor FingerprintSensorEx.DBCount return "
+							+ ret3);
 					return false;
 				}
 			}
@@ -1507,7 +1526,7 @@ public class FingerprintSensorHandle {
 						}
 					} else {
 					}
-					if(mbStop){
+					if (mbStop) {
 						break;
 					}
 					try {
@@ -1587,7 +1606,8 @@ public class FingerprintSensorHandle {
 				if (enroll_idx < regtemparray.length) {
 					System.arraycopy(template, 0, regtemparray[enroll_idx], 0,
 							2048);
-					fingerprintTemplateArry[enroll_idx] = TissonAFIS.imagePath2FingerprintTemplate(fingerprintBmpPath);
+					fingerprintTemplateArry[enroll_idx] = TissonAFIS
+							.imagePath2FingerprintTemplate(fingerprintBmpPath);
 				}
 				enroll_idx++;
 				if (enroll_idx == 3) {
@@ -1693,8 +1713,8 @@ public class FingerprintSensorHandle {
 								TissonAFIS.load(vo);
 								vo.setFpTemplateByteArry(regTemp);
 								vo.setOwner(currentOwner);
-//								fingerprintDbArry.add(iFid - 1, vo);
-//								iFid++;
+								// fingerprintDbArry.add(iFid - 1, vo);
+								// iFid++;
 							}
 						}
 						if (0 != ret) {
@@ -1717,17 +1737,20 @@ public class FingerprintSensorHandle {
 					// Base64 Template
 					cmdPrompt = "enroll succ";
 
-//					currentOwnerRegTempBase64 = "libzkfp:"
-//							+ _retLen[0]
-//							+ ":"
-//							+ FingerprintSensorEx.BlobToBase64(regTemp,
-//									_retLen[0]);
-//
-//					currentOwnerRegTempBase64 = collectName + ":"
-//							+ currentOwnerRegTempBase64;
+					// currentOwnerRegTempBase64 = "libzkfp:"
+					// + _retLen[0]
+					// + ":"
+					// + FingerprintSensorEx.BlobToBase64(regTemp,
+					// _retLen[0]);
+					//
+					// currentOwnerRegTempBase64 = collectName + ":"
+					// + currentOwnerRegTempBase64;
 
-					currentOwnerRegTempBase64 = collectName + ":" + TissonAFIS.buildZipJsonTemplateZip(fingerprintTemplateArry);
-					
+					currentOwnerRegTempBase64 = collectName
+							+ ":"
+							+ TissonAFIS
+									.buildZipJsonTemplateZip(fingerprintTemplateArry);
+
 					if (bCollection) {
 
 					} else {
@@ -1832,7 +1855,7 @@ public class FingerprintSensorHandle {
 						// }
 						// }
 						if (fid[0] <= fingerprintDbArry.size()) {
-							currentOwner = fingerprintDbArry.get(fid[0]-1)
+							currentOwner = fingerprintDbArry.get(fid[0] - 1)
 									.getOwner();
 						}
 						if (bDel) {
@@ -2069,30 +2092,16 @@ public class FingerprintSensorHandle {
 		lockEvent.setEvent();
 	}
 
+	public void destroy() {
+		thPool.destroy();
+	}
+	
 	public void stop() {
 		log.info("work thread stop() begin....");
 		int ret = lockEvent.waitEvent(8000);
 		if (ret != 0) {
 			log.warn("lockEvent.waitEvent(8000)=" + ret + "!=0");
 			lockEvent.setEvent();
-		}
-		try {
-			if (log.isDebugEnabled()) {
-				log.debug("thPool.killTimeOutTask(10000) begin....");
-			}
-			thPool.killTimeOutTask(10000);
-			if (log.isDebugEnabled()) {
-				log.debug("thPool.killTimeOutTask(10000) retun.");
-			}
-			if (log.isDebugEnabled()) {
-				log.debug("thPool.stop() begin....");
-			}
-			thPool.stop();
-			if (log.isDebugEnabled()) {
-				log.debug("thPool.stop() retun.");
-			}
-		} catch (Throwable t) {
-			log.warn(t.toString(), t);
 		}
 
 		mbStop = true;
@@ -2123,17 +2132,18 @@ public class FingerprintSensorHandle {
 		lockEvent.setEvent();
 	}
 
-	private class FPMatchTask implements INmaCollectorTaskInf {
+	private class FPMatchTask implements Runnable, SfipCallable<TreeMap> {
 		private FingerprintVo findVo;
 		private int minScore;
 		private TreeMap<String, FingerprintVo> result;
 		private int beginPos;
 		private int endPos;
 		private String name = "";
+		private boolean finshed=false;
+		private boolean readyStop=false;
 
 		public FPMatchTask(FingerprintVo findVo, int minScore,
-				TreeMap<String, FingerprintVo> result, int beginPos,
-				int endPos) {
+				TreeMap<String, FingerprintVo> result, int beginPos, int endPos) {
 			this.findVo = findVo;
 			this.minScore = minScore;
 			this.result = result;
@@ -2144,7 +2154,14 @@ public class FingerprintSensorHandle {
 					+ endPos;
 		}
 
-		public Object call() {
+		public void run() {
+			finshed =  false;
+			readyStop = false;
+			call();
+			finshed =true;
+		}
+
+		public TreeMap call() {
 			if (log.isDebugEnabled()) {
 				log.debug(name + " begin...");
 			}
@@ -2170,10 +2187,11 @@ public class FingerprintSensorHandle {
 					}
 					return result;
 				}
-				for (int j = beginPos; j <= endPos; j++) {
+				for (int j = beginPos; j <= endPos && !readyStop; j++) {
 					FingerprintVo vo = fingerprintDbArry.get(j - 1);// getFingerprintVo(j);
 
-					if (findVo.getType() != vo.getType() && vo.getFpTemplateByteArry()==null) {
+					if (findVo.getType() != vo.getType()
+							&& vo.getFpTemplateByteArry() == null) {
 						continue;
 					}
 					ret = -1;
@@ -2220,6 +2238,15 @@ public class FingerprintSensorHandle {
 		 */
 		public String getName() {
 			return name;
+		}
+
+
+		public boolean isFinshed() {
+			return finshed;
+		}
+
+		public void readyStop() {
+			readyStop=true;
 		}
 
 	}
@@ -2310,7 +2337,8 @@ public class FingerprintSensorHandle {
 	private void testFGT() {
 		try {
 			String hostName = java.net.InetAddress.getLocalHost().getHostName();
-			if ((!(hostName.equals("yihaijun"))) && (!(hostName.equals("XXJS-XX-YHJ")))) {
+			if ((!(hostName.equals("yihaijun")))
+					&& (!(hostName.equals("XXJS-XX-YHJ")))) {
 				return;
 			}
 		} catch (Throwable t) {
@@ -2319,9 +2347,9 @@ public class FingerprintSensorHandle {
 		try {
 			String zkBase = readFileByChars("D:\\fingerprint-aaa-20180313-182041-987-DBMerge-1164.txt");
 			byte[] zkFpTemplate = new byte[1164];
-			if(zkBase!=null && (!(zkBase.trim().equals("")))){
-				int retB2B = FingerprintSensorEx.Base64ToBlob(zkBase, zkFpTemplate,
-						1164);
+			if (zkBase != null && (!(zkBase.trim().equals("")))) {
+				int retB2B = FingerprintSensorEx.Base64ToBlob(zkBase,
+						zkFpTemplate, 1164);
 				log.info("retB2B=" + retB2B);
 				FingerprintTemplate zkFp = new FingerprintTemplate()
 						.convert(zkFpTemplate);
@@ -2365,8 +2393,8 @@ public class FingerprintSensorHandle {
 
 			ret = TissonAFIS.match(fgt1Fp, fgtiso3Fp);
 			buf.append("fgt1Fp:fgtiso3Fp=" + ret + ";");
-			
-//========
+
+			// ========
 			ret = TissonAFIS.match(fgt2Fp, fgtiso1Fp);
 			buf.append("fgt2Fp:fgtiso1Fp=" + ret + ";");
 
@@ -2375,10 +2403,10 @@ public class FingerprintSensorHandle {
 
 			ret = TissonAFIS.match(fgt2Fp, fgtiso3Fp);
 			buf.append("fgt2Fp:fgtiso3Fp=" + ret + ";");
-//========
+			// ========
 			ret = TissonAFIS.match(fgtiso1Fp, fgtiso2Fp);
 			buf.append("fgtiso1Fp:fgtiso2Fp=" + ret + ";");
-			
+
 			ret = TissonAFIS.match(fgtiso1Fp, fgtiso3Fp);
 			buf.append("fgtiso1Fp:fgtiso3Fp=" + ret + ";");
 
@@ -2389,7 +2417,7 @@ public class FingerprintSensorHandle {
 			try {
 				Thread.sleep(1000);
 			} catch (Throwable t) {
-				log.warn(t.toString(),t);
+				log.warn(t.toString(), t);
 			}
 		}
 
